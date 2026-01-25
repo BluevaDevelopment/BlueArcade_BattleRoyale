@@ -1,0 +1,98 @@
+# Battle Royale Module - English (UK)
+# Only Battle Royale-specific content
+
+file_version: 1
+display_name: "Battle Royale"
+
+description:
+  - "<dark_gray><strikethrough>----------------------------------------------</strikethrough></dark_gray>"
+  - "<green>Game</green> <gray>-</gray> <yellow><bold>Battle Royale</bold></yellow>"
+  - " "
+  - "<white>Description:</white>"
+  - "<gray>Drop in, loot chests, and survive the storm.</gray>"
+  - "<gray>Work with your squad to be the last team standing.</gray>"
+  - " "
+  - "<dark_gray><strikethrough>----------------------------------------------</strikethrough></dark_gray>"
+
+# Vote menu
+vote_menu:
+  name: "<green>Battle Royale</green>"
+  lore:
+    - "<gray>Fly in with the dragon and pick your landing spot.</gray>"
+    - "<gray>Loot, fight, and survive the shrinking storm.</gray>"
+    - ""
+    - "<white>{votes}</white> <gray>votes.</gray>"
+
+stats:
+  labels:
+    kills: "Eliminations"
+    games_played: "Battle Royale games played"
+    wins: "Battle Royale wins"
+    chests_looted: "Chests looted"
+    storm_damage_taken: "Storm damage taken"
+
+messages:
+  eliminated: "<red>You are out! You are now a spectator.</red>"
+  out_of_bounds: "<yellow>You cannot leave the battle zone.</yellow>"
+  storm:
+    incoming: "<aqua>The storm will start moving in <white>{seconds}</white> seconds.</aqua>"
+    moving: "<red>The storm is closing in!</red>"
+  deaths:
+    killed_by_player:
+      - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>was eliminated by</gray> <yellow>{killer}</yellow><gray>.</gray>"
+      - "<dark_red>✘</dark_red> <yellow>{killer}</yellow> <gray>outplayed</gray> <red>{victim}</red><gray>.</gray>"
+      - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>fell to</gray> <yellow>{killer}</yellow><gray>'s attack.</gray>"
+      - "<dark_red>✘</dark_red> <yellow>{killer}</yellow> <gray>took down</gray> <red>{victim}</red><gray>.</gray>"
+    generic:
+      - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>couldn't survive the chaos.</gray>"
+      - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>was lost in the storm.</gray>"
+      - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>was eliminated.</gray>"
+
+titles:
+  you_died:
+    title: "<red><bold>YOU DIED</bold></red>"
+    subtitle: "<gray>Back to the lobby.</gray>"
+  classified:
+    title: "<yellow><bold>ELIMINATED</bold></yellow>"
+    subtitle: "<gray>Your squad continues without you.</gray>"
+
+scoreboard:
+  solo_team_label: "Solo"
+  storm_status:
+    safe: "<green>Safe</green>"
+    unsafe: "<red>In Storm</red>"
+  default:
+    title: "<bold><gradient:aqua:light_purple>Blue Arcade</gradient></bold>"
+    lines:
+      - ""
+      - "<white>Arena:</white> <aqua>{arena}</aqua>"
+      - "<white>Game:</white> <aqua>Battle Royale</aqua>"
+      - ""
+      - "<white>Team:</white> <yellow>{team}</yellow>"
+      - "<white>Teams Alive:</white> <green>{alive_teams}</green>"
+      - "<white>Players Alive:</white> <green>{alive}</green>"
+      - "<white>Your Kills:</white> <red>{kills}</red>"
+      - ""
+      - "<white>Storm Radius:</white> <aqua>{storm_radius}</aqua>"
+      - "<white>Storm Stage:</white> <aqua>{storm_stage}</aqua>"
+      - "<white>Storm Status:</white> {storm_status}"
+      - ""
+      - "<yellow>www.blueva.net</yellow>"
+
+setup_messages:
+  team:
+    usage: "<red>Usage:</red> <yellow>/baa game <id> battle_royale team <count|size> <value></yellow>"
+    success: "<green>Team {setting} set to {value} for {game} in arena {arena_id}.</green>"
+    invalid_limit: "<red>Team configuration exceeds arena max players ({max_players}).</red>"
+    invalid_value: "<red>Team {setting} must be greater than 0.</red>"
+    invalid_count: "<red>Team count must be at least 2.</red>"
+  search_chests:
+    missing_bounds: "<red>Game bounds are not configured yet.</red>"
+    start: "<yellow>Searching for chests... ({blocks} blocks to scan)</yellow>"
+    action_bar: "<gold>Searching chests</gold> <gray>(Time elapsed: {time})</gray> <dark_gray>•</dark_gray> <green>{found}</green>"
+    complete: "<green>Chest search completed.</green> <yellow>Found {found} chests in {time}.</yellow>"
+  region:
+    usage: "<red>Usage:</red> <yellow>/baa game <id> battle_royale region <set|clear></yellow>"
+    must_use_stick: "<red>Select two corners with the setup tool first.</red>"
+    set: "<green>Regeneration region saved.</green> <gray>Blocks:</gray> <white>{blocks}</white> <gray>({x}x{y}x{z})</gray>"
+    cleared: "<yellow>Regeneration region cleared.</yellow>"

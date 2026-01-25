@@ -1,0 +1,225 @@
+file_version: 1
+category:
+  id: battle_royale
+  name: "Battle Royale"
+  description:
+    - "Achievements tied to Battle Royale."
+  icon: DRAGON_HEAD
+  sort_order: 22
+
+achievements:
+  drop_veteran:
+    name: "Drop Veteran"
+    description:
+      - "Play Battle Royale matches."
+    icon: DRAGON_HEAD
+    phases:
+      1:
+        name: "First drop"
+        description:
+          - "Play 1 match."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_games_played} >= 1"
+        rewards:
+          commands:
+            - "baa credits give {player} 10"
+            - "baa xp give {player} 10"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+10 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+10 XP</light_purple>"
+      2:
+        name: "Warm-up"
+        description:
+          - "Play 10 matches."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_games_played} >= 10"
+        rewards:
+          commands:
+            - "baa credits give {player} 25"
+            - "baa xp give {player} 25"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+25 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+25 XP</light_purple>"
+      3:
+        name: "Survivor"
+        description:
+          - "Play 25 matches."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_games_played} >= 25"
+        rewards:
+          commands:
+            - "baa credits give {player} 40"
+            - "baa xp give {player} 40"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+40 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+40 XP</light_purple>"
+      4:
+        name: "Storm fighter"
+        description:
+          - "Play 50 matches."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_games_played} >= 50"
+        rewards:
+          commands:
+            - "baa credits give {player} 60"
+            - "baa xp give {player} 60"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+60 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+60 XP</light_purple>"
+      5:
+        name: "Battle Royale legend"
+        description:
+          - "Play 100 matches."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_games_played} >= 100"
+        rewards:
+          commands:
+            - "baa credits give {player} 90"
+            - "baa xp give {player} 90"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+90 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+90 XP</light_purple>"
+
+  eliminator:
+    name: "Eliminator"
+    description:
+      - "Eliminate opponents."
+    icon: DIAMOND_SWORD
+    phases:
+      1:
+        name: "Opening strike"
+        description:
+          - "Eliminate 1 player."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_kills} >= 1"
+        rewards:
+          commands:
+            - "baa credits give {player} 20"
+            - "baa xp give {player} 20"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+20 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+20 XP</light_purple>"
+      2:
+        name: "Duelist"
+        description:
+          - "Eliminate 10 players."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_kills} >= 10"
+        rewards:
+          commands:
+            - "baa credits give {player} 45"
+            - "baa xp give {player} 45"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+45 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+45 XP</light_purple>"
+      3:
+        name: "Arena menace"
+        description:
+          - "Eliminate 25 players."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_kills} >= 25"
+        rewards:
+          commands:
+            - "baa credits give {player} 70"
+            - "baa xp give {player} 70"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+70 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+70 XP</light_purple>"
+      4:
+        name: "Arena ace"
+        description:
+          - "Eliminate 50 players."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_kills} >= 50"
+        rewards:
+          commands:
+            - "baa credits give {player} 90"
+            - "baa xp give {player} 90"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+90 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+90 XP</light_purple>"
+      5:
+        name: "Battlefield champion"
+        description:
+          - "Eliminate 100 players."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_kills} >= 100"
+        rewards:
+          commands:
+            - "baa credits give {player} 120"
+            - "baa xp give {player} 120"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+120 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+120 XP</light_purple>"
+
+  loot_runner:
+    name: "Loot Runner"
+    description:
+      - "Loot chests across the island."
+    icon: CHEST
+    phases:
+      1:
+        name: "Quick grab"
+        description:
+          - "Loot 5 chests."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_chests_looted} >= 5"
+        rewards:
+          commands:
+            - "baa credits give {player} 15"
+            - "baa xp give {player} 15"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+15 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+15 XP</light_purple>"
+      2:
+        name: "Supply seeker"
+        description:
+          - "Loot 20 chests."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_chests_looted} >= 20"
+        rewards:
+          commands:
+            - "baa credits give {player} 35"
+            - "baa xp give {player} 35"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+35 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+35 XP</light_purple>"
+      3:
+        name: "Treasure tracker"
+        description:
+          - "Loot 50 chests."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_chests_looted} >= 50"
+        rewards:
+          commands:
+            - "baa credits give {player} 55"
+            - "baa xp give {player} 55"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+55 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+55 XP</light_purple>"
+      4:
+        name: "Armory hunter"
+        description:
+          - "Loot 100 chests."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_chests_looted} >= 100"
+        rewards:
+          commands:
+            - "baa credits give {player} 80"
+            - "baa xp give {player} 80"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+80 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+80 XP</light_purple>"
+      5:
+        name: "Vault raider"
+        description:
+          - "Loot 200 chests."
+        conditions:
+          - "{bluearcade_stat_module_battle_royale_chests_looted} >= 200"
+        rewards:
+          commands:
+            - "baa credits give {player} 120"
+            - "baa xp give {player} 120"
+          messages:
+            - "  <gold>⛁</gold> <yellow>+120 credits</yellow>"
+            - "  <dark_purple>✹</dark_purple> <light_purple>+120 XP</light_purple>"

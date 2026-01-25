@@ -1,0 +1,4 @@
+name: BlueArcadeModule
+version: 1.0.0
+main: net.blueva.arcade.plugin.BlueArcadeModule
+api-version: 1.21
