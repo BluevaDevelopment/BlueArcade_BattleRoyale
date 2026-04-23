@@ -9,6 +9,7 @@ import net.blueva.arcade.api.game.GameContext;
 import net.blueva.arcade.api.game.GameModule;
 import net.blueva.arcade.api.game.GameResult;
 import net.blueva.arcade.api.module.ModuleInfo;
+import net.blueva.arcade.api.setup.SetupRequirement;
 import net.blueva.arcade.api.stats.StatDefinition;
 import net.blueva.arcade.api.stats.StatScope;
 import net.blueva.arcade.api.stats.StatsAPI;
@@ -28,6 +29,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
+import java.util.Set;
 
 public class BattleRoyaleModule implements GameModule<Player, Location, World, Material, ItemStack, Sound, Block, Entity, Listener, EventPriority> {
 
@@ -89,6 +91,11 @@ public class BattleRoyaleModule implements GameModule<Player, Location, World, M
     }
 
     @Override
+    public Set<SetupRequirement> getDisabledRequirements() {
+        return Set.of(SetupRequirement.SPAWNS);
+    }
+
+    @Override
     public void onGameStart(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
         game.beginPlaying(context);
     }
@@ -140,16 +147,16 @@ public class BattleRoyaleModule implements GameModule<Player, Location, World, M
         }
 
         statsAPI.registerModuleStat(moduleInfo.getId(),
-                new StatDefinition("wins", "Wins", "Battle Royale victories", StatScope.MODULE));
+                new StatDefinition("wins", moduleConfig.getStringFrom("language.yml", "stats.labels.wins", "Wins"), moduleConfig.getStringFrom("language.yml", "stats.descriptions.wins", "Battle Royale victories"), StatScope.MODULE));
         statsAPI.registerModuleStat(moduleInfo.getId(),
-                new StatDefinition("games_played", "Games Played", "Battle Royale matches played", StatScope.MODULE));
+                new StatDefinition("games_played", moduleConfig.getStringFrom("language.yml", "stats.labels.games_played", "Games Played"), moduleConfig.getStringFrom("language.yml", "stats.descriptions.games_played", "Battle Royale matches played"), StatScope.MODULE));
         statsAPI.registerModuleStat(moduleInfo.getId(),
-                new StatDefinition("kills", "Eliminations", "Opponents eliminated in Battle Royale", StatScope.MODULE));
+                new StatDefinition("kills", moduleConfig.getStringFrom("language.yml", "stats.labels.kills", "Eliminations"), moduleConfig.getStringFrom("language.yml", "stats.descriptions.kills", "Opponents eliminated in Battle Royale"), StatScope.MODULE));
         statsAPI.registerModuleStat(moduleInfo.getId(),
-                new StatDefinition("chests_looted", "Chests Looted", "Looted chests in Battle Royale", StatScope.MODULE));
+                new StatDefinition("chests_looted", moduleConfig.getStringFrom("language.yml", "stats.labels.chests_looted", "Chests Looted"), moduleConfig.getStringFrom("language.yml", "stats.descriptions.chests_looted", "Looted chests in Battle Royale"), StatScope.MODULE));
         statsAPI.registerModuleStat(moduleInfo.getId(),
-                new StatDefinition("storm_damage_taken", "Storm Damage Taken",
-                        "Damage received from the storm in Battle Royale", StatScope.MODULE));
+                new StatDefinition("storm_damage_taken", moduleConfig.getStringFrom("language.yml", "stats.labels.storm_damage_taken", "Storm Damage Taken"),
+                        moduleConfig.getStringFrom("language.yml", "stats.descriptions.storm_damage_taken", "Damage received from the storm in Battle Royale"), StatScope.MODULE));
     }
 
     private void registerAchievements() {

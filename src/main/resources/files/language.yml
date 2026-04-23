@@ -1,7 +1,7 @@
 # Battle Royale Module - English (UK)
 # Only Battle Royale-specific content
 
-file_version: 1
+file_version: 2
 display_name: "Battle Royale"
 
 description:
@@ -24,6 +24,13 @@ vote_menu:
     - "<white>{votes}</white> <gray>votes.</gray>"
 
 stats:
+
+  descriptions:
+    wins: "Battle Royale victories"
+    games_played: "Battle Royale matches played"
+    kills: "Opponents eliminated in Battle Royale"
+    chests_looted: "Looted chests in Battle Royale"
+    storm_damage_taken: "Damage received from the storm in Battle Royale"
   labels:
     kills: "Eliminations"
     games_played: "Battle Royale games played"
@@ -78,6 +85,21 @@ scoreboard:
       - "<white>Storm Status:</white> {storm_status}"
       - ""
       - "<yellow>www.blueva.net</yellow>"
+  solo:
+    title: "<bold><gradient:aqua:light_purple>Blue Arcade</gradient></bold>"
+    lines:
+      - ""
+      - "<white>Arena:</white> <aqua>{arena}</aqua>"
+      - "<white>Game:</white> <aqua>Battle Royale</aqua>"
+      - ""
+      - "<white>Players Alive:</white> <green>{alive}</green>"
+      - "<white>Your Kills:</white> <red>{kills}</red>"
+      - ""
+      - "<white>Storm Radius:</white> <aqua>{storm_radius}</aqua>"
+      - "<white>Storm Stage:</white> <aqua>{storm_stage}</aqua>"
+      - "<white>Storm Status:</white> {storm_status}"
+      - ""
+      - "<yellow>www.blueva.net</yellow>"
 
 setup_messages:
   team:
@@ -95,4 +117,4 @@ setup_messages:
     usage: "<red>Usage:</red> <yellow>/baa game <id> battle_royale region <set|clear></yellow>"
     must_use_stick: "<red>Select two corners with the setup tool first.</red>"
     set: "<green>Regeneration region saved.</green> <gray>Blocks:</gray> <white>{blocks}</white> <gray>({x}x{y}x{z})</gray>"
-    cleared: "<yellow>Regeneration region cleared.</yellow>"
+    cleared: "<yellow>Regeneration region cleared.</yellow> <gray>Note: Block placement/breaking will be disabled without a region.</gray>"

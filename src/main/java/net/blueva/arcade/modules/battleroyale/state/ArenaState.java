@@ -8,8 +8,8 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
@@ -27,6 +27,7 @@ public class ArenaState {
     private final Map<UUID, Integer> playerKills = new ConcurrentHashMap<>();
     private final Set<UUID> droppingPlayers = ConcurrentHashMap.newKeySet();
     private final Set<UUID> dropInvisiblePlayers = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> planePlayers = ConcurrentHashMap.newKeySet();
     private final Map<UUID, ItemStack> storedChestplates = new ConcurrentHashMap<>();
     private final Set<String> lootedChests = ConcurrentHashMap.newKeySet();
     private List<TrackedChest> trackedChests = new ArrayList<>();
@@ -45,9 +46,11 @@ public class ArenaState {
     private Location stormCenter;
     private int stormLightningTicks;
 
-    private EnderDragon dropDragon;
-    private ArmorStand dropCarrier;
+    private ArmorStand dropVehicle;
+    private List<BlockDisplay> planeDisplays;
     private WorldBorder stormBorder;
+
+    private Boolean respawnRegionCheckResult;
 
     public ArenaState(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
         this.context = context;
@@ -130,6 +133,26 @@ public class ArenaState {
 
     public Set<UUID> getDropInvisiblePlayers() {
         return Set.copyOf(dropInvisiblePlayers);
+    }
+
+    public void addPlanePlayer(UUID playerId) {
+        planePlayers.add(playerId);
+    }
+
+    public void removePlanePlayer(UUID playerId) {
+        planePlayers.remove(playerId);
+    }
+
+    public boolean isOnPlane(UUID playerId) {
+        return planePlayers.contains(playerId);
+    }
+
+    public Set<UUID> getPlanePlayers() {
+        return Set.copyOf(planePlayers);
+    }
+
+    public void clearPlanePlayers() {
+        planePlayers.clear();
     }
 
     public boolean markChestLooted(Location location) {
@@ -234,20 +257,20 @@ public class ArenaState {
         stormLightningTicks = 0;
     }
 
-    public EnderDragon getDropDragon() {
-        return dropDragon;
+    public ArmorStand getDropVehicle() {
+        return dropVehicle;
     }
 
-    public void setDropDragon(EnderDragon dropDragon) {
-        this.dropDragon = dropDragon;
+    public void setDropVehicle(ArmorStand dropVehicle) {
+        this.dropVehicle = dropVehicle;
     }
 
-    public ArmorStand getDropCarrier() {
-        return dropCarrier;
+    public List<BlockDisplay> getPlaneDisplays() {
+        return planeDisplays;
     }
 
-    public void setDropCarrier(ArmorStand dropCarrier) {
-        this.dropCarrier = dropCarrier;
+    public void setPlaneDisplays(List<BlockDisplay> planeDisplays) {
+        this.planeDisplays = planeDisplays;
     }
 
     public WorldBorder getStormBorder() {
@@ -256,6 +279,18 @@ public class ArenaState {
 
     public void setStormBorder(WorldBorder stormBorder) {
         this.stormBorder = stormBorder;
+    }
+
+    public boolean hasRespawnRegion() {
+        if (respawnRegionCheckResult == null) {
+            respawnRegionCheckResult = context.getDataAccess().hasGameData("game.play_area.bounds.min.x")
+                    && context.getDataAccess().hasGameData("game.play_area.bounds.min.y")
+                    && context.getDataAccess().hasGameData("game.play_area.bounds.min.z")
+                    && context.getDataAccess().hasGameData("game.play_area.bounds.max.x")
+                    && context.getDataAccess().hasGameData("game.play_area.bounds.max.y")
+                    && context.getDataAccess().hasGameData("game.play_area.bounds.max.z");
+        }
+        return respawnRegionCheckResult;
     }
 
     private String toKey(Location location) {

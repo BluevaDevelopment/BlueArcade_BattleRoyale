@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class BattleRoyaleGame {
@@ -43,6 +44,7 @@ public class BattleRoyaleGame {
 
     private final Map<Integer, ArenaState> arenas = new ConcurrentHashMap<>();
     private final Map<Player, Integer> playerArena = new ConcurrentHashMap<>();
+    private final Map<Integer, Set<UUID>> countdownPreparedByArena = new ConcurrentHashMap<>();
 
     private final DescriptionService descriptionService;
     private final PlayerLoadoutService loadoutService;
@@ -80,7 +82,7 @@ public class BattleRoyaleGame {
         arenas.put(arenaId, state);
         state.setTrackedChests(lootService.loadChests(context));
 
-        TeamsAPI teamsAPI = context.getTeamsAPI();
+        TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
         for (Player player : context.getPlayers()) {
             playerArena.put(player, arenaId);
             state.initializePlayer(player.getUniqueId());
@@ -94,9 +96,23 @@ public class BattleRoyaleGame {
 
     public void handleCountdownTick(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
                                     int secondsLeft) {
+        ArenaState state = getArenaState(context);
+        Location countdownView = state != null ? resolveCountdownSpectatorLocation(context) : null;
+
         for (Player player : context.getPlayers()) {
             if (!player.isOnline()) {
                 continue;
+            }
+
+            if (countdownView != null && markCountdownPrepared(context.getArenaId(), player.getUniqueId())) {
+                Location targetView = countdownView.clone();
+                context.getSchedulerAPI().runAtEntity(player, () -> {
+                    if (!player.isOnline()) {
+                        return;
+                    }
+                    player.teleport(targetView);
+                    player.setGameMode(GameMode.SPECTATOR);
+                });
             }
 
             context.getSoundsAPI().play(player, coreConfig.getSound("sounds.starting_game.countdown"));
@@ -150,7 +166,7 @@ public class BattleRoyaleGame {
             loadoutService.restoreVitals(player);
             loadoutService.giveStartingItems(player);
             loadoutService.applyStartingEffects(player);
-            context.getScoreboardAPI().showScoreboard(player, getScoreboardPath());
+            context.getScoreboardAPI().showScoreboard(player, getScoreboardPath(context));
         }
     }
 
@@ -159,6 +175,7 @@ public class BattleRoyaleGame {
         context.getSchedulerAPI().cancelArenaTasks(arenaId);
 
         ArenaState state = arenas.remove(arenaId);
+        countdownPreparedByArena.remove(arenaId);
         if (state != null) {
             lootService.restoreChests(context, state);
             dropService.cleanup(state);
@@ -183,6 +200,45 @@ public class BattleRoyaleGame {
 
         arenas.clear();
         playerArena.clear();
+        countdownPreparedByArena.clear();
+    }
+
+    private boolean markCountdownPrepared(int arenaId, UUID playerId) {
+        if (playerId == null) {
+            return false;
+        }
+        return countdownPreparedByArena
+                .computeIfAbsent(arenaId, ignored -> ConcurrentHashMap.newKeySet())
+                .add(playerId);
+    }
+
+    private Location resolveCountdownSpectatorLocation(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
+        if (context == null || context.getArenaAPI() == null) {
+            return null;
+        }
+
+        Location min = context.getArenaAPI().getBoundsMin();
+        Location max = context.getArenaAPI().getBoundsMax();
+        if (min == null || max == null || min.getWorld() == null) {
+            return null;
+        }
+
+        World world = min.getWorld();
+        double minY = Math.min(min.getY(), max.getY());
+        double maxY = Math.max(min.getY(), max.getY());
+        double centerX = (min.getX() + max.getX()) / 2.0;
+        double centerZ = (min.getZ() + max.getZ()) / 2.0;
+        double minAllowedY = minY + 1.0;
+        double maxAllowedY = maxY - 1.0;
+        double preferredY = maxY - 2.0;
+        double centerY = maxAllowedY >= minAllowedY
+                ? Math.max(minAllowedY, Math.min(preferredY, maxAllowedY))
+                : (minY + maxY) / 2.0;
+
+        Location location = new Location(world, centerX, centerY, centerZ);
+        location.setYaw(0.0f);
+        location.setPitch(60.0f);
+        return location;
     }
 
     public Map<String, String> getPlaceholders(Player player) {
@@ -316,12 +372,31 @@ public class BattleRoyaleGame {
         }
     }
 
-    public String getScoreboardPath() {
-        return "scoreboard.default";
+    public String getScoreboardPath(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
+        return isSoloMode(context) ? "scoreboard.solo" : "scoreboard.default";
+    }
+
+    public boolean isSoloMode(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
+        if (context == null) {
+            return true;
+        }
+        TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
+        if (teamsAPI == null || !teamsAPI.isEnabled()) {
+            return true;
+        }
+        if (context.getDataAccess() == null) {
+            return false;
+        }
+        Integer teamSize = context.getDataAccess().getGameData("teams.size", Integer.class);
+        Integer teamCount = context.getDataAccess().getGameData("teams.count", Integer.class);
+        if (teamSize != null && teamSize <= 1) {
+            return true;
+        }
+        return teamCount != null && teamCount <= 1;
     }
 
     public List<String> getAliveTeamIds(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
-        TeamsAPI teamsAPI = context.getTeamsAPI();
+        TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
         if (teamsAPI == null || !teamsAPI.isEnabled()) {
             List<String> ids = new ArrayList<>();
             if (!context.getAlivePlayers().isEmpty()) {
@@ -332,7 +407,7 @@ public class BattleRoyaleGame {
 
         Set<String> teamIds = new HashSet<>();
         for (Player player : context.getAlivePlayers()) {
-            TeamInfo team = teamsAPI.getTeam(player);
+            TeamInfo<Player, Material> team = teamsAPI.getTeam(player);
             if (team != null) {
                 teamIds.add(team.getId());
             }
@@ -342,12 +417,12 @@ public class BattleRoyaleGame {
 
     public Map<String, Integer> getTeamKills(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
         Map<String, Integer> teamKills = new HashMap<>();
-        TeamsAPI teamsAPI = context.getTeamsAPI();
+        TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
         for (Player player : context.getPlayers()) {
             int kills = getPlayerKills(context, player);
             String teamId = "solo";
             if (teamsAPI != null && teamsAPI.isEnabled()) {
-                TeamInfo team = teamsAPI.getTeam(player);
+                TeamInfo<Player, Material> team = teamsAPI.getTeam(player);
                 if (team != null) {
                     teamId = team.getId();
                 }
@@ -359,14 +434,14 @@ public class BattleRoyaleGame {
 
     public List<Player> getTeamPlayers(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
                                        String teamId) {
-        TeamsAPI teamsAPI = context.getTeamsAPI();
+        TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
         List<Player> players = new ArrayList<>();
         for (Player player : context.getPlayers()) {
             if (teamsAPI == null || !teamsAPI.isEnabled()) {
                 players.add(player);
                 continue;
             }
-            TeamInfo team = teamsAPI.getTeam(player);
+            TeamInfo<Player, Material> team = teamsAPI.getTeam(player);
             if (team != null && team.getId().equalsIgnoreCase(teamId)) {
                 players.add(player);
             }
@@ -456,13 +531,13 @@ public class BattleRoyaleGame {
                     context.getMessagesAPI().sendActionBar(player, actionBarMessage);
                 }
 
-                context.getScoreboardAPI().update(player, getScoreboardPath(), customPlaceholders);
+                context.getScoreboardAPI().update(player, getScoreboardPath(context), customPlaceholders);
             }
         }, 0L, 20L);
     }
 
     private boolean shouldEndForVictory(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
-        TeamsAPI teamsAPI = context.getTeamsAPI();
+        TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
         if (teamsAPI != null && teamsAPI.isEnabled()) {
             return getAliveTeamIds(context).size() <= 1;
         }

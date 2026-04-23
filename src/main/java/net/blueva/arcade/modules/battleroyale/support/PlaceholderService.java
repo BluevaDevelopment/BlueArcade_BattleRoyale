@@ -39,9 +39,9 @@ public class PlaceholderService {
             placeholders.put("kills", String.valueOf(game.getPlayerKills(context, player)));
             placeholders.put("alive_teams", String.valueOf(game.getAliveTeamIds(context).size()));
 
-            TeamsAPI teamsAPI = context.getTeamsAPI();
+            TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
             if (teamsAPI != null && teamsAPI.isEnabled()) {
-                TeamInfo team = teamsAPI.getTeam(player);
+                TeamInfo<Player, Material> team = teamsAPI.getTeam(player);
                 placeholders.put("team", team != null ? team.getDisplayName() : "-");
             } else {
                 placeholders.put("team", moduleConfig.getStringFrom("language.yml", "scoreboard.solo_team_label", "Solo"));

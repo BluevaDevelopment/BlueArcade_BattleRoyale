@@ -56,7 +56,6 @@ public class PlayerLoadoutService {
                     }
                 }
             } catch (Exception ignored) {
-                // Ignore malformed entries
             }
         }
     }
@@ -109,7 +108,6 @@ public class PlayerLoadoutService {
                     }
                 }
             } catch (Exception ignored) {
-                // Ignore malformed entries
             }
         }
     }

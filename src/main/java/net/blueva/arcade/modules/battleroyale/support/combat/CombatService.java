@@ -62,6 +62,10 @@ public class CombatService {
             return;
         }
 
+        if (context.getSpectators().contains(target)) {
+            return;
+        }
+
         Location deathLocation = target.getLocation();
         playVisualEffects(target, killer, deathLocation);
 
@@ -109,6 +113,10 @@ public class CombatService {
     private void broadcastDeathMessage(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
                                        Player victim,
                                        Player killer) {
+        if (context.getSpectators().contains(victim)) {
+            return;
+        }
+
         String path = killer != null ? "messages.deaths.killed_by_player" : "messages.deaths.generic";
         String message = getRandomMessage(path);
 

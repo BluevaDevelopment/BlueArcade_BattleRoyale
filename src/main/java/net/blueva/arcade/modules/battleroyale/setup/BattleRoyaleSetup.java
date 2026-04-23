@@ -68,21 +68,21 @@ public class BattleRoyaleSetup implements GameSetupHandler {
 
     private boolean handleTeamConfig(SetupContext<Player, CommandSender, Location> context) {
         if (!context.hasHandlerArgs(2)) {
-            context.getMessagesAPI().send(context.getPlayer(),
+            context.getMessagesAPI().sendRaw(context.getPlayer(),
                     getSetupMessage("team.usage"));
             return true;
         }
 
         String setting = context.getHandlerArg(0);
         if (setting == null || (!setting.equalsIgnoreCase("count") && !setting.equalsIgnoreCase("size"))) {
-            context.getMessagesAPI().send(context.getPlayer(),
+            context.getMessagesAPI().sendRaw(context.getPlayer(),
                     getSetupMessage("team.usage"));
             return true;
         }
 
         String valueRaw = context.getHandlerArg(1);
         if (valueRaw == null || !isNumber(valueRaw)) {
-            context.getMessagesAPI().send(context.getPlayer(),
+            context.getMessagesAPI().sendRaw(context.getPlayer(),
                     module.getCoreConfig().getLanguage("admin_commands.errors.invalid_number")
                             .replace("{value}", valueRaw == null ? "" : valueRaw));
             return true;
@@ -90,14 +90,14 @@ public class BattleRoyaleSetup implements GameSetupHandler {
 
         int value = Integer.parseInt(valueRaw);
         if (value <= 0) {
-            context.getMessagesAPI().send(context.getPlayer(),
+            context.getMessagesAPI().sendRaw(context.getPlayer(),
                     getSetupMessage("team.invalid_value")
                             .replace("{setting}", setting));
             return true;
         }
 
         if (setting.equalsIgnoreCase("count") && value < 2) {
-            context.getMessagesAPI().send(context.getPlayer(),
+            context.getMessagesAPI().sendRaw(context.getPlayer(),
                     getSetupMessage("team.invalid_count"));
             return true;
         }
@@ -112,7 +112,7 @@ public class BattleRoyaleSetup implements GameSetupHandler {
 
         int maxPlayers = context.getData().getArenaInt("arena.basic.max_players", 0);
         if (teamCount > 0 && teamSize > 0 && maxPlayers > 0 && teamCount * teamSize > maxPlayers) {
-            context.getMessagesAPI().send(context.getPlayer(),
+            context.getMessagesAPI().sendRaw(context.getPlayer(),
                     getSetupMessage("team.invalid_limit")
                             .replace("{max_players}", String.valueOf(maxPlayers)));
             return true;
@@ -121,7 +121,7 @@ public class BattleRoyaleSetup implements GameSetupHandler {
         context.getData().setTeamConfig(teamCount, teamSize);
         context.getData().save();
 
-        context.getMessagesAPI().send(context.getPlayer(),
+        context.getMessagesAPI().sendRaw(context.getPlayer(),
                 getSetupMessage("team.success")
                         .replace("{game}", context.getGameId())
                         .replace("{arena_id}", String.valueOf(context.getArenaId()))
@@ -137,7 +137,7 @@ public class BattleRoyaleSetup implements GameSetupHandler {
         }
 
         if (!context.getData().has("bounds.min.x") || !context.getData().has("bounds.max.x")) {
-            context.getMessagesAPI().send(player,
+            context.getMessagesAPI().sendRaw(player,
                     getSetupMessage("search_chests.missing_bounds"));
             return true;
         }
@@ -155,7 +155,7 @@ public class BattleRoyaleSetup implements GameSetupHandler {
         String worldName = context.getData().getString("basic.world");
         World world = worldName == null ? null : Bukkit.getWorld(worldName);
         if (world == null) {
-            context.getMessagesAPI().send(player,
+            context.getMessagesAPI().sendRaw(player,
                     getSetupMessage("search_chests.missing_bounds"));
             return true;
         }
@@ -172,7 +172,7 @@ public class BattleRoyaleSetup implements GameSetupHandler {
         List<String> chests = new ArrayList<>();
         long startTime = System.currentTimeMillis();
 
-        context.getMessagesAPI().send(player,
+        context.getMessagesAPI().sendRaw(player,
                 getSetupMessage("search_chests.start")
                         .replace("{blocks}", String.valueOf(totalBlocks)));
 
@@ -211,7 +211,7 @@ public class BattleRoyaleSetup implements GameSetupHandler {
                 if (index >= totalBlocks) {
                     context.getData().setStringList("loot.chests.locations", chests);
                     context.getData().save();
-                    context.getMessagesAPI().send(player,
+                    context.getMessagesAPI().sendRaw(player,
                             getSetupMessage("search_chests.complete")
                                     .replace("{found}", String.valueOf(chests.size()))
                                     .replace("{time}", elapsed));
@@ -233,14 +233,14 @@ public class BattleRoyaleSetup implements GameSetupHandler {
 
     private boolean handleRegion(SetupContext<Player, CommandSender, Location> context) {
         if (!context.hasHandlerArgs(1)) {
-            context.getMessagesAPI().send(context.getPlayer(),
+            context.getMessagesAPI().sendRaw(context.getPlayer(),
                     getSetupMessage("region.usage"));
             return true;
         }
 
         String action = context.getHandlerArg(0);
         if (action == null) {
-            context.getMessagesAPI().send(context.getPlayer(),
+            context.getMessagesAPI().sendRaw(context.getPlayer(),
                     getSetupMessage("region.usage"));
             return true;
         }
@@ -249,13 +249,13 @@ public class BattleRoyaleSetup implements GameSetupHandler {
             context.getData().remove("game.play_area");
             context.getData().remove("regeneration.regions");
             context.getData().save();
-            context.getMessagesAPI().send(context.getPlayer(),
+            context.getMessagesAPI().sendRaw(context.getPlayer(),
                     getSetupMessage("region.cleared"));
             return true;
         }
 
         if (!"set".equalsIgnoreCase(action)) {
-            context.getMessagesAPI().send(context.getPlayer(),
+            context.getMessagesAPI().sendRaw(context.getPlayer(),
                     getSetupMessage("region.usage"));
             return true;
         }
@@ -266,7 +266,7 @@ public class BattleRoyaleSetup implements GameSetupHandler {
         }
 
         if (!context.getSelection().hasCompleteSelection(player)) {
-            context.getMessagesAPI().send(player,
+            context.getMessagesAPI().sendRaw(player,
                     getSetupMessage("region.must_use_stick"));
             return true;
         }
@@ -282,7 +282,7 @@ public class BattleRoyaleSetup implements GameSetupHandler {
         int z = (int) Math.abs(pos2.getZ() - pos1.getZ()) + 1;
         int blocks = x * y * z;
 
-        context.getMessagesAPI().send(player,
+        context.getMessagesAPI().sendRaw(player,
                 getSetupMessage("region.set")
                         .replace("{blocks}", String.valueOf(blocks))
                         .replace("{x}", String.valueOf(x))

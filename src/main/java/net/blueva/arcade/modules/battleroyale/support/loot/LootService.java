@@ -183,7 +183,6 @@ public class LootService {
                 }
                 parsed.add(new LootEntry(material, Math.max(1, min), Math.max(min, max), weight));
             } catch (Exception ignored) {
-                // Ignore malformed entries
             }
         }
 

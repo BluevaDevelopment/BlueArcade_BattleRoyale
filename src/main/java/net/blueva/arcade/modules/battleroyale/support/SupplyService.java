@@ -50,7 +50,6 @@ public class SupplyService {
                         player.getInventory().addItem(new org.bukkit.inventory.ItemStack(material, amount));
                     }
                 } catch (Exception ignored) {
-                    // Ignore malformed entries
                 }
             }
         }

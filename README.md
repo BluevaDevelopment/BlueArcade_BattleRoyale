@@ -35,8 +35,10 @@ Use these steps to register the arena and attach the module:
 - `/baa game [arena_id] add [minigame]` — Attach this minigame module to the arena.
 - `/baa stick` — Get the setup tool to select regions.
 - `/baa game [arena_id] [minigame] bounds set` — Save the game bounds for this arena.
-- `/baa game [arena_id] [minigame] spawn add` — Add spawn points for players.
-- `/baa game [arena_id] [minigame] time [minutes]` — Set the match duration.
+- ~~`/baa game [arena_id] [minigame] spawn add`~~ — Not used in Battle Royale.
+  Players are deployed via the drop mechanic at match start.
+- ~~`/baa game [arena_id] [minigame] time [minutes]`~~ — Not used in Battle Royale.
+  The match ends when only one team or player remains.
 
 ### Module-specific steps
 Finish the setup with the commands below:

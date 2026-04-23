@@ -1,12 +1,12 @@
 name: Battle Royale
 id: battle_royale
-version: 1.0.0
+version: ${revision}
 type: MINIGAME
-api-version: 1.0
+api-version: 3.3
 main: net.blueva.arcade.modules.battleroyale.BattleRoyaleModule
 
 authors:
   - Blueva
   - Whiron
 
-description: "Battle Royale minigame - drop, loot, and survive the storm." 
+description: "Drop, loot, and survive the storm."

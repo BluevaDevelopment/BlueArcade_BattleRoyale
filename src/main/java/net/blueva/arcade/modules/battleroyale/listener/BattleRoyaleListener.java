@@ -51,9 +51,10 @@ public class BattleRoyaleListener implements Listener {
 
         if (game.isDropping(context, player) && player.isOnGround()) {
             game.handleDropLanding(context, player);
+            return;
         }
         ArenaState state = game.getArenaState(context);
-        if (state != null && player.isSneaking() && player.isInsideVehicle() && player.getVehicle() == state.getDropDragon()) {
+        if (state != null && state.isOnPlane(player.getUniqueId()) && player.isSneaking()) {
             game.handleDropExit(context, player);
         }
 
@@ -61,14 +62,8 @@ public class BattleRoyaleListener implements Listener {
             return;
         }
 
-        if (game.isDropping(context, player) || (state != null && player.isInsideVehicle() && player.getVehicle() == state.getDropDragon())) {
+        if (game.isDropping(context, player) || (state != null && state.isOnPlane(player.getUniqueId()))) {
             return;
-        }
-
-        if (!context.isInsideBounds(event.getTo()) && game.getModuleConfig().getBoolean("storm.prevent_escape", true)) {
-            Location fallback = state != null && state.getStormCenter() != null ? state.getStormCenter() : player.getLocation();
-            player.teleport(fallback);
-            context.getMessagesAPI().sendRaw(player, game.getModuleConfig().getStringFrom("language.yml", "messages.out_of_bounds"));
         }
     }
 
@@ -81,7 +76,7 @@ public class BattleRoyaleListener implements Listener {
             return;
         }
         ArenaState state = game.getArenaState(context);
-        if (event.isSneaking() && state != null && player.isInsideVehicle() && player.getVehicle() == state.getDropDragon()) {
+        if (event.isSneaking() && state != null && state.isOnPlane(player.getUniqueId())) {
             game.handleDropExit(context, player);
         }
     }
@@ -94,26 +89,45 @@ public class BattleRoyaleListener implements Listener {
         if (event.getClickedBlock() == null) {
             return;
         }
+        
         Material type = event.getClickedBlock().getType();
-        if (type != Material.CHEST && type != Material.TRAPPED_CHEST && type != Material.ENDER_CHEST) {
-            return;
-        }
+        
+        if (type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.ENDER_CHEST) {
+            Player player = event.getPlayer();
+            GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context =
+                    game.getContext(player);
+                    
+            if (context == null || !context.isPlayerPlaying(player)) {
+                return;
+            }
 
-        Player player = event.getPlayer();
-        GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context =
-                game.getContext(player);
-        if (context == null || context.getPhase() != GamePhase.PLAYING || !context.isPlayerPlaying(player)) {
+            if (context.getPhase() != GamePhase.PLAYING) {
+                event.setCancelled(true);
+                return;
+            }
+
+            if (game.isChestLooted(context, player, event.getClickedBlock())) {
+                event.setCancelled(true);
+                return;
+            }
+
             event.setCancelled(true);
+            game.handleChestLoot(context, player, event.getClickedBlock());
             return;
         }
-
-        if (game.isChestLooted(context, player, event.getClickedBlock())) {
-            event.setCancelled(true);
+        
+        if (isInteractiveBlock(type)) {
             return;
         }
-
-        event.setCancelled(true);
-        game.handleChestLoot(context, player, event.getClickedBlock());
+    }
+    
+    private boolean isInteractiveBlock(Material type) {
+        String name = type.name();
+        return name.endsWith("_DOOR")
+                || name.endsWith("_BUTTON")
+                || name.endsWith("_PRESSURE_PLATE")
+                || name.endsWith("_TRAPDOOR")
+                || type == Material.LEVER;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -122,13 +136,24 @@ public class BattleRoyaleListener implements Listener {
         GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context =
                 game.getContext(player);
 
-        if (context == null || !context.isPlayerPlaying(player) || context.getPhase() != GamePhase.PLAYING) {
+        if (context == null || !context.isPlayerPlaying(player)) {
+            return;
+        }
+
+        if (context.getPhase() != GamePhase.PLAYING) {
             event.setCancelled(true);
             return;
         }
 
-        if (!context.isInsideBounds(event.getBlock().getLocation())) {
+        ArenaState state = game.getArenaState(context);
+        if (state == null) {
             event.setCancelled(true);
+            return;
+        }
+
+        if (!state.hasRespawnRegion()) {
+            event.setCancelled(true);
+            return;
         }
     }
 
@@ -138,13 +163,24 @@ public class BattleRoyaleListener implements Listener {
         GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context =
                 game.getContext(player);
 
-        if (context == null || !context.isPlayerPlaying(player) || context.getPhase() != GamePhase.PLAYING) {
+        if (context == null || !context.isPlayerPlaying(player)) {
+            return;
+        }
+
+        if (context.getPhase() != GamePhase.PLAYING) {
             event.setCancelled(true);
             return;
         }
 
-        if (!context.isInsideBounds(event.getBlock().getLocation())) {
+        ArenaState state = game.getArenaState(context);
+        if (state == null) {
             event.setCancelled(true);
+            return;
+        }
+
+        if (!state.hasRespawnRegion()) {
+            event.setCancelled(true);
+            return;
         }
     }
 
@@ -171,10 +207,10 @@ public class BattleRoyaleListener implements Listener {
             return;
         }
 
-        TeamsAPI teamsAPI = context.getTeamsAPI();
+        TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
         if (teamsAPI != null && teamsAPI.isEnabled()) {
-            TeamInfo attackerTeam = teamsAPI.getTeam(attacker);
-            TeamInfo targetTeam = teamsAPI.getTeam(target);
+            TeamInfo<Player, Material> attackerTeam = teamsAPI.getTeam(attacker);
+            TeamInfo<Player, Material> targetTeam = teamsAPI.getTeam(target);
             if (attackerTeam != null && targetTeam != null && attackerTeam.getId().equalsIgnoreCase(targetTeam.getId())) {
                 event.setCancelled(true);
                 return;

@@ -17,6 +17,10 @@ drop:
   flight_height: 120
   # Movement speed (blocks per tick)
   speed_blocks_per_tick: 0.6
+  # Ticks between plane position updates; larger values let the
+  # BlockDisplay client-side interpolation smooth the movement.
+  # Effective step size is speed_blocks_per_tick * interpolation_ticks.
+  interpolation_ticks: 5
   # Offset from the arena edge when spawning the dragon path
   edge_offset: 4.0
   # Half-size for the dragon flight path

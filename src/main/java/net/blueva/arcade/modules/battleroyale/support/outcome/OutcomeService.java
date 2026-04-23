@@ -61,7 +61,7 @@ public class OutcomeService {
     private void declareWinningTeam(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
                                     ArenaState state,
                                     String teamId) {
-        TeamsAPI teamsAPI = context.getTeamsAPI();
+        TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
         List<Player> winners = game.getTeamPlayers(context, teamId);
         if (teamsAPI != null && teamsAPI.isEnabled()) {
             teamsAPI.setWinningTeam(teamId);
@@ -86,7 +86,7 @@ public class OutcomeService {
                 .map(Map.Entry::getKey)
                 .toList();
 
-        TeamsAPI teamsAPI = context.getTeamsAPI();
+        TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
         if (teamsAPI != null && teamsAPI.isEnabled()) {
             teamsAPI.setWinningTeams(topTeams);
         }

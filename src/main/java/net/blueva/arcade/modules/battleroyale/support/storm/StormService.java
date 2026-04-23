@@ -166,10 +166,9 @@ public class StormService {
             return true;
         }
 
-        double dx = location.getX() - state.getStormCenter().getX();
-        double dz = location.getZ() - state.getStormCenter().getZ();
-        double distance = Math.sqrt(dx * dx + dz * dz);
-        return distance <= safeRadius;
+        double dx = Math.abs(location.getX() - state.getStormCenter().getX());
+        double dz = Math.abs(location.getZ() - state.getStormCenter().getZ());
+        return dx <= safeRadius && dz <= safeRadius;
     }
 
     private Location resolveCenter(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
@@ -233,7 +232,6 @@ public class StormService {
                 int standby = parts.length >= 4 ? Integer.parseInt(parts[3]) : defaultStandby;
                 stages.add(new StormStage(Math.max(0.0, radius), Math.max(1, duration), Math.max(0.0, damage), Math.max(0, standby)));
             } catch (NumberFormatException ignored) {
-                // Ignore malformed lines
             }
         }
         return stages;

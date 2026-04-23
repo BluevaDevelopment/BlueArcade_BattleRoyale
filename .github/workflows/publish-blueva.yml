@@ -1,0 +1,88 @@
+﻿name: Publish Blueva Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: [self-hosted, linux, x64]
+    permissions:
+      contents: read
+    timeout-minutes: 30
+
+    env:
+      BLUEVA_UPDATE_URL: "https://store.blueva.net/index.php?route=/api/v2/resources/update"
+      BLUEVA_RESOURCE_ID: "24"
+      BLUEVA_CHANNEL_ID_MINECRAFT: "minecraft"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Resolve build version
+        id: version
+        shell: bash
+        run: |
+          SHORT_SHA=$(git rev-parse --short=7 HEAD)
+          BUILD_DATE=$(date +%Y%m%d)
+          VERSION="${BUILD_DATE}-${SHORT_SHA}"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION"
+
+      - name: Resolve changelog
+        id: changelog
+        shell: bash
+        run: |
+          COMMIT_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+          COMMIT_MSG="$(git log -1 --pretty=%B)"
+
+          {
+            echo "content<<EOF"
+            echo "Automated release from commit $COMMIT_URL"
+            echo
+            echo "$COMMIT_MSG"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build Maven project
+        run: mvn -B clean package -Drevision=${{ steps.version.outputs.version }}
+
+      - name: Locate generated JAR files
+        id: jars
+        shell: bash
+        run: |
+          MC_JAR=$(find target -maxdepth 1 -type f -name "*.jar" ! -name "*sources.jar" ! -name "*javadoc.jar" | head -n 1)
+
+          if [ -z "$MC_JAR" ]; then
+            echo "Minecraft JAR not found"
+            exit 1
+          fi
+
+          echo "mc_jar=$MC_JAR" >> "$GITHUB_OUTPUT"
+          echo "Minecraft JAR: $MC_JAR"
+
+      - name: Publish Minecraft release
+        shell: bash
+        run: |
+          curl -X POST "$BLUEVA_UPDATE_URL" \
+            -H "Authorization: Bearer ${{ secrets.BLUEVA_API_KEY }}" \
+            -F "resource_id=$BLUEVA_RESOURCE_ID" \
+            -F "channel_id=$BLUEVA_CHANNEL_ID_MINECRAFT" \
+            -F "version=${{ steps.version.outputs.version }}" \
+            -F "title=Battle Royale ${{ steps.version.outputs.version }}" \
+            -F "changelog=${{ steps.changelog.outputs.content }}" \
+            -F "file=@${{ steps.jars.outputs.mc_jar }}"
+
