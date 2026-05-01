@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.WorldBorder;
 import org.bukkit.inventory.ItemStack;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -242,14 +243,14 @@ public class StormService {
         if (state.getStormCenter() == null) {
             return;
         }
-        WorldBorder border = Bukkit.createWorldBorder();
+        WorldBorder border = createWorldBorder(state.getStormCenter());
         border.setCenter(state.getStormCenter());
         border.setSize(Math.max(1.0, state.getStormRadius() * 2.0));
         border.setWarningDistance(0);
         border.setWarningTime(0);
         state.setStormBorder(border);
         for (Player player : context.getPlayers()) {
-            player.setWorldBorder(border);
+            setPlayerWorldBorder(player, border);
         }
     }
 
@@ -261,7 +262,7 @@ public class StormService {
         }
         border.setCenter(state.getStormCenter());
         for (Player player : context.getPlayers()) {
-            player.setWorldBorder(border);
+            setPlayerWorldBorder(player, border);
         }
     }
 
@@ -269,7 +270,24 @@ public class StormService {
                                  ArenaState state) {
         state.setStormBorder(null);
         for (Player player : context.getPlayers()) {
-            player.setWorldBorder(null);
+            setPlayerWorldBorder(player, null);
+        }
+    }
+
+    private WorldBorder createWorldBorder(Location center) {
+        try {
+            Method creator = Bukkit.class.getMethod("createWorldBorder");
+            return (WorldBorder) creator.invoke(null);
+        } catch (ReflectiveOperationException ignored) {
+            return center.getWorld().getWorldBorder();
+        }
+    }
+
+    private void setPlayerWorldBorder(Player player, WorldBorder border) {
+        try {
+            Method setter = player.getClass().getMethod("setWorldBorder", WorldBorder.class);
+            setter.invoke(player, border);
+        } catch (ReflectiveOperationException ignored) {
         }
     }
 

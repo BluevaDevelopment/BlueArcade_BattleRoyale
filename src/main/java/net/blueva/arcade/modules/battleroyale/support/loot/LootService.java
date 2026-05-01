@@ -101,9 +101,10 @@ public class LootService {
             return List.of();
         }
 
+        World arenaWorld = context.getArenaAPI() != null ? context.getArenaAPI().getWorld() : null;
         List<TrackedChest> chests = new ArrayList<>();
         for (String entry : entries) {
-            TrackedChest trackedChest = parseTrackedChest(entry);
+            TrackedChest trackedChest = parseTrackedChest(entry, arenaWorld);
             if (trackedChest != null) {
                 chests.add(trackedChest);
             }
@@ -155,7 +156,7 @@ public class LootService {
                 Location particleLocation = location.clone().add(0.5, 1.1, 0.5);
                 Particle particle = currentType == Material.ENDER_CHEST
                         ? Particle.PORTAL
-                        : Particle.HAPPY_VILLAGER;
+                        : happyVillagerParticle();
                 location.getWorld().spawnParticle(particle, particleLocation, 6, 0.2, 0.3, 0.2, 0.01);
             }
         }, 20L, 40L);
@@ -189,7 +190,7 @@ public class LootService {
         return parsed;
     }
 
-    private TrackedChest parseTrackedChest(String entry) {
+    private TrackedChest parseTrackedChest(String entry, World fallbackWorld) {
         if (entry == null || entry.isEmpty()) {
             return null;
         }
@@ -214,10 +215,14 @@ public class LootService {
                 material = Material.CHEST;
             }
 
-            Location location = new Location(org.bukkit.Bukkit.getWorld(worldName), x, y, z);
-            if (location.getWorld() == null) {
+            World world = org.bukkit.Bukkit.getWorld(worldName);
+            if (world == null) {
+                world = fallbackWorld;
+            }
+            if (world == null) {
                 return null;
             }
+            Location location = new Location(world, x, y, z);
             return new TrackedChest(location, material);
         } catch (Exception ignored) {
             return null;
@@ -238,6 +243,14 @@ public class LootService {
             }
         }
         return entries.get(entries.size() - 1);
+    }
+
+    private Particle happyVillagerParticle() {
+        try {
+            return Particle.valueOf("HAPPY_VILLAGER");
+        } catch (IllegalArgumentException ignored) {
+            return Particle.VILLAGER_HAPPY;
+        }
     }
 
     private static class LootEntry {

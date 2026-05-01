@@ -9,14 +9,15 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -94,7 +95,7 @@ public class DropService {
 
         double speed = moduleConfig.getDouble("drop.speed_blocks_per_tick", 0.6);
         int interpolationTicks = Math.max(1, moduleConfig.getInt("drop.interpolation_ticks", 5));
-        List<BlockDisplay> displays = spawnPlaneDisplays(world, start, direction, right, interpolationTicks);
+        List<Entity> displays = spawnPlaneDisplays(world, start, direction, right, interpolationTicks);
         state.setPlaneDisplays(displays);
 
         for (Player player : context.getPlayers()) {
@@ -215,9 +216,9 @@ public class DropService {
         }
         state.setDropVehicle(null);
 
-        List<BlockDisplay> displays = state.getPlaneDisplays();
+        List<Entity> displays = state.getPlaneDisplays();
         if (displays != null) {
-            for (BlockDisplay bd : displays) {
+            for (Entity bd : displays) {
                 if (bd != null && bd.isValid()) {
                     bd.remove();
                 }
@@ -293,35 +294,38 @@ public class DropService {
         }
     }
 
-    private List<BlockDisplay> spawnPlaneDisplays(World world, Location origin,
-                                                   Vector forward, Vector right,
-                                                   int interpolationTicks) {
-        List<BlockDisplay> displays = new ArrayList<>();
+    private List<Entity> spawnPlaneDisplays(World world, Location origin,
+                                            Vector forward, Vector right,
+                                            int interpolationTicks) {
+        List<Entity> displays = new ArrayList<>();
+        EntityType blockDisplayType = blockDisplayType();
+        if (blockDisplayType == null) {
+            return displays;
+        }
         for (int i = 0; i < PLANE_OFFSETS.length; i++) {
             int lr = PLANE_OFFSETS[i][0];
             int up = PLANE_OFFSETS[i][1];
             int lf = PLANE_OFFSETS[i][2];
             Material mat = PLANE_MATERIALS[i];
             Location loc = blockLocation(origin, forward, right, lr, up, lf);
-            BlockDisplay bd = world.spawn(loc, BlockDisplay.class, entity -> {
-                entity.setBlock(mat.createBlockData());
-                entity.setPersistent(false);
-                entity.setGravity(false);
-                entity.setInvulnerable(true);
-                entity.setTeleportDuration(interpolationTicks);
-            });
+            Entity bd = world.spawnEntity(loc, blockDisplayType);
+            invoke(bd, "setBlock", new Class<?>[]{org.bukkit.block.data.BlockData.class}, mat.createBlockData());
+            invoke(bd, "setPersistent", new Class<?>[]{boolean.class}, false);
+            invoke(bd, "setGravity", new Class<?>[]{boolean.class}, false);
+            invoke(bd, "setInvulnerable", new Class<?>[]{boolean.class}, true);
+            invoke(bd, "setTeleportDuration", new Class<?>[]{int.class}, interpolationTicks);
             displays.add(bd);
         }
         return displays;
     }
 
-    private void teleportPlaneDisplays(List<BlockDisplay> displays, Location origin,
+    private void teleportPlaneDisplays(List<Entity> displays, Location origin,
                                         Vector forward, Vector right) {
         if (displays == null) {
             return;
         }
         for (int i = 0; i < displays.size() && i < PLANE_OFFSETS.length; i++) {
-            BlockDisplay bd = displays.get(i);
+            Entity bd = displays.get(i);
             if (bd == null || !bd.isValid()) {
                 continue;
             }
@@ -339,6 +343,22 @@ public class DropService {
                         .add(new Vector(0, up, 0))
                         .add(forward.clone().multiply(lf))
         );
+    }
+
+    private EntityType blockDisplayType() {
+        try {
+            return EntityType.valueOf("BLOCK_DISPLAY");
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
+    private void invoke(Entity entity, String methodName, Class<?>[] parameterTypes, Object... args) {
+        try {
+            Method method = entity.getClass().getMethod(methodName, parameterTypes);
+            method.invoke(entity, args);
+        } catch (ReflectiveOperationException ignored) {
+        }
     }
 
     private void applyDropInvisibility(ArenaState state, Player player) {

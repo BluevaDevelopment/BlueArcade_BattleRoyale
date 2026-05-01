@@ -8,7 +8,6 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.block.Block;
@@ -47,7 +46,7 @@ public class ArenaState {
     private int stormLightningTicks;
 
     private ArmorStand dropVehicle;
-    private List<BlockDisplay> planeDisplays;
+    private List<Entity> planeDisplays;
     private WorldBorder stormBorder;
 
     private Boolean respawnRegionCheckResult;
@@ -265,11 +264,11 @@ public class ArenaState {
         this.dropVehicle = dropVehicle;
     }
 
-    public List<BlockDisplay> getPlaneDisplays() {
+    public List<Entity> getPlaneDisplays() {
         return planeDisplays;
     }
 
-    public void setPlaneDisplays(List<BlockDisplay> planeDisplays) {
+    public void setPlaneDisplays(List<Entity> planeDisplays) {
         this.planeDisplays = planeDisplays;
     }
 
