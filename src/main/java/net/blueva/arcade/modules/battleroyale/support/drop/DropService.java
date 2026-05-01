@@ -82,15 +82,7 @@ public class DropService {
 
         Vector right = new Vector(-direction.getZ(), 0.0, direction.getX());
 
-        ArmorStand vehicle = world.spawn(start, ArmorStand.class, entity -> {
-            entity.setVisible(false);
-            entity.setGravity(false);
-            entity.setInvulnerable(true);
-            entity.setPersistent(false);
-            entity.setCustomNameVisible(false);
-            entity.setBasePlate(false);
-            entity.setArms(false);
-        });
+        ArmorStand vehicle = spawnDropVehicle(world, start);
         state.setDropVehicle(vehicle);
 
         double speed = moduleConfig.getDouble("drop.speed_blocks_per_tick", 0.6);
@@ -317,6 +309,18 @@ public class DropService {
             displays.add(bd);
         }
         return displays;
+    }
+
+    private ArmorStand spawnDropVehicle(World world, Location location) {
+        ArmorStand entity = (ArmorStand) world.spawnEntity(location, EntityType.ARMOR_STAND);
+        entity.setVisible(false);
+        entity.setGravity(false);
+        entity.setInvulnerable(true);
+        entity.setPersistent(false);
+        entity.setCustomNameVisible(false);
+        entity.setBasePlate(false);
+        entity.setArms(false);
+        return entity;
     }
 
     private void teleportPlaneDisplays(List<Entity> displays, Location origin,
