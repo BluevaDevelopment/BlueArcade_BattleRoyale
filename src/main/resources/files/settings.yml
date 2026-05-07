@@ -1,6 +1,6 @@
 # Battle Royale Module Settings
 
-file_version: 1
+file_version: 2
 
 # Visual representation in menus
 menus:
@@ -13,7 +13,8 @@ game:
 
 drop:
   enabled: true
-  # Height for the dragon flight path
+  # Height for the dragon flight path.
+  # If it exceeds the arena Y-bounds, the module will clamp it inside them.
   flight_height: 120
   # Movement speed (blocks per tick)
   speed_blocks_per_tick: 0.6
@@ -21,6 +22,9 @@ drop:
   # BlockDisplay client-side interpolation smooth the movement.
   # Effective step size is speed_blocks_per_tick * interpolation_ticks.
   interpolation_ticks: 5
+  # Ignore plane-exit sneaks for a brief moment after boarding so
+  # stale crouch state from the lobby cannot throw players off.
+  exit_grace_ticks: 10
   # Offset from the arena edge when spawning the dragon path
   edge_offset: 4.0
   # Half-size for the dragon flight path

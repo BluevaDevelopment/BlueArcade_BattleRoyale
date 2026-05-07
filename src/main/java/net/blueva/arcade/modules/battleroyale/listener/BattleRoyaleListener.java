@@ -54,9 +54,6 @@ public class BattleRoyaleListener implements Listener {
             return;
         }
         ArenaState state = game.getArenaState(context);
-        if (state != null && state.isOnPlane(player.getUniqueId()) && player.isSneaking()) {
-            game.handleDropExit(context, player);
-        }
 
         if (context.getPhase() != GamePhase.PLAYING) {
             return;
@@ -76,8 +73,8 @@ public class BattleRoyaleListener implements Listener {
             return;
         }
         ArenaState state = game.getArenaState(context);
-        if (event.isSneaking() && state != null && state.isOnPlane(player.getUniqueId())) {
-            game.handleDropExit(context, player);
+        if (state != null && state.isOnPlane(player.getUniqueId())) {
+            game.handlePlaneSneakToggle(context, player, event.isSneaking());
         }
     }
 

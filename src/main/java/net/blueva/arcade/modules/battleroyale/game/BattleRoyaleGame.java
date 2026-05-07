@@ -156,11 +156,6 @@ public class BattleRoyaleGame {
             context.setPlayers(context.getPlayers());
         }
 
-        stormService.initializeStorm(context, state);
-        startGameTimer(context, state);
-        dropService.startDrop(context, state);
-        lootService.startChestMarkers(context, state);
-
         for (Player player : context.getPlayers()) {
             player.setGameMode(GameMode.SURVIVAL);
             loadoutService.restoreVitals(player);
@@ -168,6 +163,11 @@ public class BattleRoyaleGame {
             loadoutService.applyStartingEffects(player);
             context.getScoreboardAPI().showScoreboard(player, getScoreboardPath(context));
         }
+
+        stormService.initializeStorm(context, state);
+        startGameTimer(context, state);
+        dropService.startDrop(context, state);
+        lootService.startChestMarkers(context, state);
     }
 
     public void finishGame(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
@@ -306,6 +306,16 @@ public class BattleRoyaleGame {
             return;
         }
         dropService.handleDropExit(state, player);
+    }
+
+    public void handlePlaneSneakToggle(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
+                                       Player player,
+                                       boolean sneaking) {
+        ArenaState state = getArenaState(context);
+        if (state == null) {
+            return;
+        }
+        dropService.handlePlaneSneakToggle(state, player, sneaking);
     }
 
     public void handleDropLanding(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,

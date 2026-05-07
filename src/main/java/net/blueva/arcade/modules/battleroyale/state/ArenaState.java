@@ -27,7 +27,9 @@ public class ArenaState {
     private final Set<UUID> droppingPlayers = ConcurrentHashMap.newKeySet();
     private final Set<UUID> dropInvisiblePlayers = ConcurrentHashMap.newKeySet();
     private final Set<UUID> planePlayers = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> planeExitReleaseRequired = ConcurrentHashMap.newKeySet();
     private final Map<UUID, ItemStack> storedChestplates = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> planeBoardedAt = new ConcurrentHashMap<>();
     private final Set<String> lootedChests = ConcurrentHashMap.newKeySet();
     private List<TrackedChest> trackedChests = new ArrayList<>();
 
@@ -134,12 +136,20 @@ public class ArenaState {
         return Set.copyOf(dropInvisiblePlayers);
     }
 
-    public void addPlanePlayer(UUID playerId) {
+    public void addPlanePlayer(UUID playerId, boolean requireSneakRelease) {
         planePlayers.add(playerId);
+        planeBoardedAt.put(playerId, System.currentTimeMillis());
+        if (requireSneakRelease) {
+            planeExitReleaseRequired.add(playerId);
+        } else {
+            planeExitReleaseRequired.remove(playerId);
+        }
     }
 
     public void removePlanePlayer(UUID playerId) {
         planePlayers.remove(playerId);
+        planeBoardedAt.remove(playerId);
+        planeExitReleaseRequired.remove(playerId);
     }
 
     public boolean isOnPlane(UUID playerId) {
@@ -150,8 +160,26 @@ public class ArenaState {
         return Set.copyOf(planePlayers);
     }
 
+    public boolean requiresPlaneExitRelease(UUID playerId) {
+        return planeExitReleaseRequired.contains(playerId);
+    }
+
+    public void markPlaneExitRelease(UUID playerId) {
+        planeExitReleaseRequired.remove(playerId);
+    }
+
+    public boolean hasPlaneExitGraceElapsed(UUID playerId, long graceMillis) {
+        Long boardedAt = planeBoardedAt.get(playerId);
+        if (boardedAt == null) {
+            return false;
+        }
+        return System.currentTimeMillis() - boardedAt >= Math.max(0L, graceMillis);
+    }
+
     public void clearPlanePlayers() {
         planePlayers.clear();
+        planeBoardedAt.clear();
+        planeExitReleaseRequired.clear();
     }
 
     public boolean markChestLooted(Location location) {

@@ -24,6 +24,8 @@ import java.util.UUID;
 
 public class DropService {
 
+    private static final int DEFAULT_EXIT_GRACE_TICKS = 10;
+
     private final ModuleConfigAPI moduleConfig;
 
     private static final int[][] PLANE_OFFSETS = {
@@ -64,7 +66,7 @@ public class DropService {
             return;
         }
 
-        Location[] route = computeRoute(context, state);
+        Location[] route = computeRoute(context);
         if (route == null) {
             return;
         }
@@ -92,12 +94,16 @@ public class DropService {
 
         for (Player player : context.getPlayers()) {
             if (player.isOnline()) {
-                state.addPlanePlayer(player.getUniqueId());
+                state.addPlanePlayer(player.getUniqueId(), player.isSneaking());
                 applyDropInvisibility(state, player);
                 Location mountLoc = start.clone();
                 mountLoc.setYaw(player.getLocation().getYaw());
                 mountLoc.setPitch(player.getLocation().getPitch());
                 player.teleport(mountLoc);
+                if (player.isInsideVehicle()) {
+                    player.leaveVehicle();
+                }
+                player.setGravity(true);
                 player.setFallDistance(0.0f);
                 player.setAllowFlight(true);
                 player.setFlying(true);
@@ -111,69 +117,98 @@ public class DropService {
         final double stepDistance = speed * interpolationTicks;
 
         context.getSchedulerAPI().runTimer(taskId, () -> {
-            context.getSchedulerAPI().runAtEntity(vehicle, () -> {
-                if (state.isEnded()) {
-                    context.getSchedulerAPI().cancelTask(taskId);
-                    context.getSchedulerAPI().cancelTask(playerTaskId);
-                    cleanup(state);
-                    return;
-                }
+            if (state.isEnded()) {
+                context.getSchedulerAPI().cancelTask(taskId);
+                context.getSchedulerAPI().cancelTask(playerTaskId);
+                cleanup(state);
+                return;
+            }
 
-                if (vehicle.isDead() || !vehicle.isValid()) {
-                    context.getSchedulerAPI().cancelTask(taskId);
-                    context.getSchedulerAPI().cancelTask(playerTaskId);
-                    cleanup(state);
-                    return;
-                }
+            double remaining = length - traveled[0];
+            double step = Math.min(stepDistance, remaining);
+            traveled[0] += step;
 
-                double remaining = length - traveled[0];
-                double step = Math.min(stepDistance, remaining);
-                traveled[0] += step;
+            Location next;
+            boolean finished = traveled[0] >= length - 1.0e-6;
+            if (finished) {
+                next = end.clone();
+            } else {
+                next = start.clone().add(direction.clone().multiply(traveled[0]));
+            }
+            next.setYaw(yaw);
 
-                Location next;
-                boolean finished = traveled[0] >= length - 1.0e-6;
-                if (finished) {
-                    next = end.clone();
-                } else {
-                    next = start.clone().add(direction.clone().multiply(traveled[0]));
+            Location finalNext = next;
+            context.getSchedulerAPI().runAtLocation(next, () -> {
+                if (!vehicle.isDead() && vehicle.isValid()) {
+                    vehicle.teleport(finalNext);
                 }
-                next.setYaw(yaw);
-                vehicle.teleport(next);
-                teleportPlaneDisplays(state.getPlaneDisplays(), next, direction, right);
-
-                if (finished) {
-                    context.getSchedulerAPI().cancelTask(taskId);
-                    context.getSchedulerAPI().cancelTask(playerTaskId);
-                    movePlanePlayers(context, state, next);
-                    forceDrop(context, state);
-                    cleanup(state);
-                }
+                teleportPlaneDisplays(state.getPlaneDisplays(), finalNext, direction, right);
             });
+
+            if (finished) {
+                context.getSchedulerAPI().cancelTask(taskId);
+                context.getSchedulerAPI().cancelTask(playerTaskId);
+                movePlanePlayers(context, state, next);
+                forceDrop(context, state);
+                cleanup(state);
+            }
         }, 0L, interpolationTicks);
 
         final long[] tickCounter = {0L};
         final Vector perTickMove = direction.clone().multiply(speed);
         context.getSchedulerAPI().runTimer(playerTaskId, () -> {
-            context.getSchedulerAPI().runAtEntity(vehicle, () -> {
-                if (state.isEnded() || vehicle.isDead() || !vehicle.isValid()) {
-                    return;
-                }
-                tickCounter[0]++;
-                double traveledNow = Math.min(length, speed * tickCounter[0]);
-                Location target = start.clone().add(direction.clone().multiply(traveledNow));
-                updatePlanePlayersVelocity(context, state, target, perTickMove);
-            });
+            if (state.isEnded()) {
+                return;
+            }
+            tickCounter[0]++;
+            double traveledNow = Math.min(length, speed * tickCounter[0]);
+            Location target = start.clone().add(direction.clone().multiply(traveledNow));
+
+            updatePlanePlayersVelocity(context, state, target, perTickMove);
         }, 1L, 1L);
     }
 
-    public void handleDropExit(ArenaState state, Player player) {
+    public void handlePlaneSneakToggle(ArenaState state, Player player, boolean sneaking) {
         if (!state.isOnPlane(player.getUniqueId())) {
             return;
+        }
+
+        long graceMillis = Math.max(0L, moduleConfig.getInt("drop.exit_grace_ticks", DEFAULT_EXIT_GRACE_TICKS)) * 50L;
+        boolean graceElapsed = state.hasPlaneExitGraceElapsed(player.getUniqueId(), graceMillis);
+        boolean requiresRelease = state.requiresPlaneExitRelease(player.getUniqueId());
+
+        if (!sneaking) {
+            state.markPlaneExitRelease(player.getUniqueId());
+            return;
+        }
+
+        if (!graceElapsed) {
+            return;
+        }
+
+        if (requiresRelease) {
+            return;
+        }
+
+        handleDropExit(state, player, "sneak-toggle");
+    }
+
+    public void handleDropExit(ArenaState state, Player player) {
+        handleDropExit(state, player, "direct-call");
+    }
+
+    private void handleDropExit(ArenaState state, Player player, String reason) {
+        if (!state.isOnPlane(player.getUniqueId())) {
+            return;
+        }
+        if (player.isInsideVehicle()) {
+            player.leaveVehicle();
         }
         ItemStack previousChestplate = player.getInventory().getChestplate();
         state.removePlanePlayer(player.getUniqueId());
         player.setFlying(false);
         player.setAllowFlight(false);
+        player.setGravity(true);
         state.markDropping(player.getUniqueId(), previousChestplate);
         player.getInventory().setChestplate(new ItemStack(Material.ELYTRA));
         player.setFallDistance(0.0f);
@@ -196,8 +231,12 @@ public class DropService {
         for (Player player : state.getContext().getPlayers()) {
             if (state.isOnPlane(player.getUniqueId()) && player.isOnline()) {
                 clearDropInvisibility(state, player);
+                if (player.isInsideVehicle()) {
+                    player.leaveVehicle();
+                }
                 player.setFlying(false);
                 player.setAllowFlight(false);
+                player.setGravity(true);
             }
         }
         state.clearPlanePlayers();
@@ -224,7 +263,7 @@ public class DropService {
         for (UUID uid : state.getPlanePlayers()) {
             for (Player player : context.getPlayers()) {
                 if (player.getUniqueId().equals(uid) && player.isOnline()) {
-                    handleDropExit(state, player);
+                    handleDropExit(state, player, "plane-route-finished");
                 }
             }
         }
@@ -257,32 +296,39 @@ public class DropService {
             if (!state.isOnPlane(player.getUniqueId()) || !player.isOnline()) {
                 continue;
             }
-            Location loc = player.getLocation();
-            double dx = target.getX() - loc.getX();
-            double dy = target.getY() - loc.getY();
-            double dz = target.getZ() - loc.getZ();
-            double distSq = dx * dx + dy * dy + dz * dz;
+            Location playerTarget = target.clone();
+            playerTarget.setYaw(player.getLocation().getYaw());
+            playerTarget.setPitch(player.getLocation().getPitch());
 
-            if (distSq > driftThresholdSq) {
-                Location dest = target.clone();
-                dest.setYaw(loc.getYaw());
-                dest.setPitch(loc.getPitch());
-                player.teleport(dest);
-            } else {
-                Vector v = perTickMove.clone();
-                v.setX(v.getX() + dx * 0.2);
-                v.setY(v.getY() + dy * 0.2);
-                v.setZ(v.getZ() + dz * 0.2);
-                player.setVelocity(v);
-            }
+            context.getSchedulerAPI().runAtEntity(player, () -> {
+                if (!state.isOnPlane(player.getUniqueId()) || !player.isOnline()) {
+                    return;
+                }
 
-            player.setFallDistance(0.0f);
-            if (!player.getAllowFlight()) {
-                player.setAllowFlight(true);
-            }
-            if (!player.isFlying()) {
-                player.setFlying(true);
-            }
+                Location loc = player.getLocation();
+                double dx = playerTarget.getX() - loc.getX();
+                double dy = playerTarget.getY() - loc.getY();
+                double dz = playerTarget.getZ() - loc.getZ();
+                double distSq = dx * dx + dy * dy + dz * dz;
+                if (!player.getAllowFlight()) {
+                    player.setAllowFlight(true);
+                }
+                if (!player.isFlying()) {
+                    player.setFlying(true);
+                }
+
+                if (distSq > driftThresholdSq) {
+                    player.teleport(playerTarget);
+                } else {
+                    Vector v = perTickMove.clone();
+                    v.setX(v.getX() + dx * 0.2);
+                    v.setY(v.getY() + dy * 0.2);
+                    v.setZ(v.getZ() + dz * 0.2);
+                    player.setVelocity(v);
+                }
+
+                player.setFallDistance(0.0f);
+            });
         }
     }
 
@@ -399,16 +445,14 @@ public class DropService {
         return moduleConfig.getDouble("drop.default_half_size", 60.0);
     }
 
-    private Location[] computeRoute(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
-                                    ArenaState state) {
+    private Location[] computeRoute(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
         Location center = getPlayAreaCenter(context);
         if (center == null) {
             return null;
         }
 
-        double flightHeight = moduleConfig.getDouble("drop.flight_height", center.getY() + 40.0);
-
         Location[] bounds = getBounds(context);
+        double flightHeight = resolveFlightHeight(center, bounds);
         if (bounds != null) {
             Location min = bounds[0];
             Location max = bounds[1];
@@ -446,6 +490,25 @@ public class DropService {
         };
     }
 
+    private double resolveFlightHeight(Location center, Location[] bounds) {
+        double configuredHeight = moduleConfig.getDouble("drop.flight_height", center.getY() + 40.0);
+        if (bounds == null) {
+            return configuredHeight;
+        }
+
+        double minY = Math.min(bounds[0].getY(), bounds[1].getY());
+        double maxY = Math.max(bounds[0].getY(), bounds[1].getY());
+        double minAllowed = minY + 1.0;
+        double maxAllowed = maxY - 1.0;
+
+        if (maxAllowed < minAllowed) {
+            minAllowed = minY;
+            maxAllowed = maxY;
+        }
+
+        return Math.max(minAllowed, Math.min(configuredHeight, maxAllowed));
+    }
+
     private double clampEdgeOffset(double desiredOffset, double size) {
         if (size <= 0.0) {
             return 0.0;
@@ -465,5 +528,4 @@ public class DropService {
         }
         return new Location[]{min, max};
     }
-
 }
