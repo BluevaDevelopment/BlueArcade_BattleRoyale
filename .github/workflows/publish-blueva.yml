@@ -15,7 +15,7 @@ jobs:
 
     env:
       BLUEVA_UPDATE_URL: "https://blueva.net/api/v2/resources/update"
-      BLUEVA_RESOURCE_ID: "24"
+      BLUEVA_INTERNAL_ID: "battle_royale"
       BLUEVA_CHANNEL_ID_MINECRAFT: "minecraft"
 
     steps:
@@ -79,7 +79,7 @@ jobs:
         run: |
           curl -X POST "$BLUEVA_UPDATE_URL" \
             -H "Authorization: Bearer ${{ secrets.BLUEVA_API_KEY }}" \
-            -F "resource_id=$BLUEVA_RESOURCE_ID" \
+            -F "internal_id=$BLUEVA_INTERNAL_ID" \
             -F "channel_id=$BLUEVA_CHANNEL_ID_MINECRAFT" \
             -F "version=${{ steps.version.outputs.version }}" \
             -F "title=Battle Royale ${{ steps.version.outputs.version }}" \
