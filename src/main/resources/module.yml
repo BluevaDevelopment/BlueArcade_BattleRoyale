@@ -2,7 +2,7 @@ name: Battle Royale
 id: battle_royale
 version: ${revision}
 type: MINIGAME
-api-version: 3.3
+api-version: 3.4
 main: net.blueva.arcade.modules.battleroyale.BattleRoyaleModule
 
 authors:
