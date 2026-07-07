@@ -44,7 +44,7 @@ public class PlaceholderService {
                 TeamInfo<Player, Material> team = teamsAPI.getTeam(player);
                 placeholders.put("team", team != null ? team.getDisplayName() : "-");
             } else {
-                placeholders.put("team", moduleConfig.getStringFrom("language.yml", "scoreboard.solo_team_label", "Solo"));
+                placeholders.put("team", moduleConfig.getTranslation(player, "scoreboard.solo_team_label"));
             }
 
             ArenaState state = game.getArenaState(context);
@@ -60,15 +60,15 @@ public class PlaceholderService {
 
     private String resolveStormStatus(Player player, ArenaState state) {
         if (player == null || state == null) {
-            return moduleConfig.getStringFrom("language.yml", "scoreboard.storm_status.safe", "Safe");
+            return moduleConfig.getTranslation(player, "scoreboard.storm_status.safe");
         }
 
         if (state.getStormCenter() == null || state.getStormRadius() <= 0) {
-            return moduleConfig.getStringFrom("language.yml", "scoreboard.storm_status.safe", "Safe");
+            return moduleConfig.getTranslation(player, "scoreboard.storm_status.safe");
         }
 
         if (player.getWorld() == null || !player.getWorld().equals(state.getStormCenter().getWorld())) {
-            return moduleConfig.getStringFrom("language.yml", "scoreboard.storm_status.safe", "Safe");
+            return moduleConfig.getTranslation(player, "scoreboard.storm_status.safe");
         }
 
         double dx = player.getLocation().getX() - state.getStormCenter().getX();
@@ -76,10 +76,10 @@ public class PlaceholderService {
         double distanceSquared = (dx * dx) + (dz * dz);
         double radius = state.getStormRadius();
         if (distanceSquared <= radius * radius) {
-            return moduleConfig.getStringFrom("language.yml", "scoreboard.storm_status.safe", "Safe");
+            return moduleConfig.getTranslation(player, "scoreboard.storm_status.safe");
         }
 
-        return moduleConfig.getStringFrom("language.yml", "scoreboard.storm_status.unsafe", "In Storm");
+        return moduleConfig.getTranslation(player, "scoreboard.storm_status.unsafe");
     }
 
     public List<Player> getPlayersSortedByKills(

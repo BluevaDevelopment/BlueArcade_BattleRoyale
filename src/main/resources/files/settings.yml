@@ -1,11 +1,17 @@
-# Battle Royale Module Settings
+#  ____  _               _                      _
+# | __ )| |_   _  ___   / \   _ __ ___ __ _  __| | ___
+# |  _ \| | | | |/ _ \ / _ \ | '__/ __/ _` |/ _` |/ _ \
+# | |_) | | |_| |  __// ___ \| | | (_| (_| | (_| |  __/
+# |____/|_|\__,_|\___/_/   \_|_|  \___\__,_|\__,_|\___|
+#
+# [!] Arcade by Blueva | https://blueva.net/store/blue-arcade [!]
 
-file_version: 2
+# Battle Royale Module Settings
 
 # Visual representation in menus
 menus:
   vote:
-    item: DRAGON_HEAD
+    item: "DRAGON_HEAD"
 
 game:
   # Set to 0 to disable a time limit

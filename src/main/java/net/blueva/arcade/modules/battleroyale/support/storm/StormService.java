@@ -402,12 +402,14 @@ public class StormService {
             return;
         }
 
-        String message = moduleConfig.getStringFrom("language.yml", "messages.storm.incoming");
-        if (message == null || message.isEmpty()) {
-            return;
+        for (Player player : context.getPlayers()) {
+            if (player.isOnline()) {
+                String message = moduleConfig.getTranslation(player, "messages.storm.incoming");
+                if (message != null && !message.isEmpty()) {
+                    context.getMessagesAPI().sendRaw(player, message.replace("{seconds}", String.valueOf(standbySeconds)));
+                }
+            }
         }
-
-        broadcast(context, message.replace("{seconds}", String.valueOf(standbySeconds)));
     }
 
     private void announceStormMoving(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
@@ -415,11 +417,14 @@ public class StormService {
             return;
         }
 
-        String message = moduleConfig.getStringFrom("language.yml", "messages.storm.moving");
-        if (message == null || message.isEmpty()) {
-            return;
+        for (Player player : context.getPlayers()) {
+            if (player.isOnline()) {
+                String message = moduleConfig.getTranslation(player, "messages.storm.moving");
+                if (message != null && !message.isEmpty()) {
+                    context.getMessagesAPI().sendRaw(player, message);
+                }
+            }
         }
-        broadcast(context, message);
     }
 
     private void broadcast(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
@@ -457,4 +462,10 @@ public class StormService {
             this.standbySeconds = standbySeconds;
         }
     }
+
+    private static String formatCountdownTime(int seconds) {
+        int safeSeconds = Math.max(0, seconds);
+        return String.format("%02d:%02d", safeSeconds / 60, safeSeconds % 60);
+    }
+
 }

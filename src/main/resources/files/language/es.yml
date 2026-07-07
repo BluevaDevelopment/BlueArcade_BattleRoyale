@@ -1,0 +1,125 @@
+#  ____  _               _                      _
+# | __ )| |_   _  ___   / \   _ __ ___ __ _  __| | ___
+# |  _ \| | | | |/ _ \ / _ \ | '__/ __/ _` |/ _` |/ _ \
+# | |_) | | |_| |  __// ___ \| | | (_| (_| | (_| |  __/
+# |____/|_|\__,_|\___/_/   \_|_|  \___\__,_|\__,_|\___|
+#
+# [!] Arcade by Blueva | https://blueva.net/store/blue-arcade [!]
+
+# Battle Royale Module - Spanish (ES)
+# Module-specific Spanish translations
+
+display_name: "Battle Royale"
+
+description:
+  - "<dark_gray><strikethrough>----------------------------------------------</strikethrough></dark_gray>"
+  - "<green>Juego</green> <gray>-</gray> <yellow><bold>Battle Royale</bold></yellow>"
+  - " "
+  - "<white>Descripción:</white>"
+  - "<gray>Aterriza, saquea cofres y sobrevive a la tormenta.</gray>"
+  - "<gray>Coopera con tu escuadrón para ser el último equipo en pie.</gray>"
+  - " "
+  - "<dark_gray><strikethrough>----------------------------------------------</strikethrough></dark_gray>"
+
+vote_menu:
+  name: "<green>Battle Royale</green>"
+  lore:
+    - "<gray>Vuela con el dragón y elige dónde aterrizar.</gray>"
+    - "<gray>Saquea, lucha y sobrevive a la tormenta que se cierra.</gray>"
+    - ""
+    - "<white>{votes}</white> <gray>votos.</gray>"
+
+stats:
+  descriptions:
+    wins: "Victorias en Battle Royale"
+    games_played: "Partidas jugadas en Battle Royale"
+    kills: "Rivales eliminados en Battle Royale"
+    chests_looted: "Cofres saqueados en Battle Royale"
+    storm_damage_taken: "Daño recibido de la tormenta en Battle Royale"
+  labels:
+    kills: "Eliminaciones"
+    games_played: "Partidas jugadas en Battle Royale"
+    wins: "Victorias en Battle Royale"
+    chests_looted: "Cofres saqueados"
+    storm_damage_taken: "Daño recibido de la tormenta"
+
+messages:
+  eliminated: "<red>¡Has sido eliminado! Ahora eres espectador.</red>"
+  out_of_bounds: "<yellow>No puedes salir de la zona de batalla.</yellow>"
+  storm:
+    incoming: "<aqua>La tormenta empezará a moverse en <white>{seconds}</white> segundos.</aqua>"
+    moving: "<red>¡La tormenta se está cerrando!</red>"
+  deaths:
+    killed_by_player:
+      - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>fue eliminado por</gray> <yellow>{killer}</yellow><gray>.</gray>"
+      - "<dark_red>✘</dark_red> <yellow>{killer}</yellow> <gray>superó a</gray> <red>{victim}</red><gray>.</gray>"
+      - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>cayó ante</gray> <yellow>{killer}</yellow><gray>.</gray>"
+      - "<dark_red>✘</dark_red> <yellow>{killer}</yellow> <gray>derrotó a</gray> <red>{victim}</red><gray>.</gray>"
+    generic:
+      - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>no sobrevivió al caos.</gray>"
+      - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>se perdió en la tormenta.</gray>"
+      - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>fue eliminado.</gray>"
+
+titles:
+  you_died:
+    title: "<red><bold>HAS MUERTO</bold></red>"
+    subtitle: "<gray>De vuelta al lobby.</gray>"
+  classified:
+    title: "<yellow><bold>ELIMINADO</bold></yellow>"
+    subtitle: "<gray>Tu escuadrón continúa sin ti.</gray>"
+
+scoreboard:
+  solo_team_label: "Solo"
+  storm_status:
+    safe: "<green>A salvo</green>"
+    unsafe: "<red>En la tormenta</red>"
+  default:
+    title: "<bold><gradient:aqua:light_purple>Blue Arcade</gradient></bold>"
+    lines:
+      - ""
+      - "<white>Arena:</white> <aqua>{arena}</aqua>"
+      - "<white>Juego:</white> <aqua>Battle Royale</aqua>"
+      - ""
+      - "<white>Equipo:</white> <yellow>{team}</yellow>"
+      - "<white>Equipos vivos:</white> <green>{alive_teams}</green>"
+      - "<white>Jugadores vivos:</white> <green>{alive}</green>"
+      - "<white>Tus bajas:</white> <red>{kills}</red>"
+      - ""
+      - "<white>Radio de la tormenta:</white> <aqua>{storm_radius}</aqua>"
+      - "<white>Fase de la tormenta:</white> <aqua>{storm_stage}</aqua>"
+      - "<white>Estado de la tormenta:</white> {storm_status}"
+      - ""
+      - "<yellow>www.blueva.net</yellow>"
+  solo:
+    title: "<bold><gradient:aqua:light_purple>Blue Arcade</gradient></bold>"
+    lines:
+      - ""
+      - "<white>Arena:</white> <aqua>{arena}</aqua>"
+      - "<white>Juego:</white> <aqua>Battle Royale</aqua>"
+      - ""
+      - "<white>Jugadores vivos:</white> <green>{alive}</green>"
+      - "<white>Tus bajas:</white> <red>{kills}</red>"
+      - ""
+      - "<white>Radio de la tormenta:</white> <aqua>{storm_radius}</aqua>"
+      - "<white>Fase de la tormenta:</white> <aqua>{storm_stage}</aqua>"
+      - "<white>Estado de la tormenta:</white> {storm_status}"
+      - ""
+      - "<yellow>www.blueva.net</yellow>"
+
+setup_messages:
+  team:
+    usage: "{prefix} <red>Uso:</red> <yellow>/baa game <id> battle_royale team <count|size> <value></yellow>"
+    success: "{prefix} <green>Equipo {setting} establecido en {value} para {game} en la arena {arena_id}.</green>"
+    invalid_limit: "{prefix} <red>La configuración de equipos supera el máximo de jugadores de la arena ({max_players}).</red>"
+    invalid_value: "{prefix} <red>Equipo {setting} debe ser mayor que 0.</red>"
+    invalid_count: "{prefix} <red>El número de equipos debe ser al menos 2.</red>"
+  search_chests:
+    missing_bounds: "{prefix} <red>Los límites del juego aún no están configurados.</red>"
+    start: "{prefix} <yellow>Buscando cofres... ({blocks} bloques que escanear)</yellow>"
+    action_bar: "<gold>Buscando cofres</gold> <gray>(Tiempo transcurrido: {time})</gray> <dark_gray>•</dark_gray> <green>{found}</green>"
+    complete: "{prefix} <green>Búsqueda de cofres completada.</green> <yellow>Encontrados {found} cofres en {time}.</yellow>"
+  region:
+    usage: "{prefix} <red>Uso:</red> <yellow>/baa game <id> battle_royale region <set|clear></yellow>"
+    must_use_stick: "{prefix} <red>Selecciona primero dos esquinas con la herramienta de setup.</red>"
+    set: "{prefix} <green>Región de regeneración guardada.</green> <gray>Bloques:</gray> <white>{blocks}</white> <gray>({x}x{y}x{z})</gray>"
+    cleared: "{prefix} <yellow>Región de regeneración borrada.</yellow> <gray>Nota: Sin una región, colocar y romper bloques estará desactivado.</gray>"

@@ -111,17 +111,17 @@ public class BattleRoyaleGame {
                         return;
                     }
                     player.teleport(targetView);
-                    player.setGameMode(GameMode.SPECTATOR);
+                    context.setPlayerSpectating(player, true);
                 });
             }
 
             context.getSoundsAPI().play(player, coreConfig.getSound("sounds.starting_game.countdown"));
 
-            String title = coreConfig.getLanguage("titles.starting_game.title")
+            String title = coreConfig.getLanguage(player, "titles.starting_game.title")
                     .replace("{game_display_name}", moduleInfo.getName())
                     .replace("{time}", String.valueOf(secondsLeft));
 
-            String subtitle = coreConfig.getLanguage("titles.starting_game.subtitle")
+            String subtitle = coreConfig.getLanguage(player, "titles.starting_game.subtitle")
                     .replace("{game_display_name}", moduleInfo.getName())
                     .replace("{time}", String.valueOf(secondsLeft));
 
@@ -135,10 +135,10 @@ public class BattleRoyaleGame {
                 continue;
             }
 
-            String title = coreConfig.getLanguage("titles.game_started.title")
+            String title = coreConfig.getLanguage(player, "titles.game_started.title")
                     .replace("{game_display_name}", moduleInfo.getName());
 
-            String subtitle = coreConfig.getLanguage("titles.game_started.subtitle")
+            String subtitle = coreConfig.getLanguage(player, "titles.game_started.subtitle")
                     .replace("{game_display_name}", moduleInfo.getName());
 
             context.getTitlesAPI().sendRaw(player, title, subtitle, 0, 20, 20);
@@ -519,23 +519,22 @@ public class BattleRoyaleGame {
                 endGame(context);
                 return;
             }
-
-            String actionBarTemplate = coreConfig.getLanguage("action_bar.in_game.global");
             for (Player player : allPlayers) {
+                String actionBarTemplate = coreConfig.getLanguage(player, "action_bar.in_game.global");
                 if (!player.isOnline()) {
                     continue;
                 }
 
                 Map<String, String> customPlaceholders = placeholderService.buildPlaceholders(player);
                 if (hasTimeLimit && timeLeft[0] > 0) {
-                    customPlaceholders.put("time", String.valueOf(timeLeft[0]));
+                    customPlaceholders.put("time", formatCountdownTime(timeLeft[0]));
                 }
                 customPlaceholders.put("alive", String.valueOf(alivePlayers.size()));
                 customPlaceholders.put("spectators", String.valueOf(context.getSpectators().size()));
 
                 if (actionBarTemplate != null && hasTimeLimit) {
                     String actionBarMessage = actionBarTemplate
-                            .replace("{time}", String.valueOf(timeLeft[0]))
+                            .replace("{time}", formatCountdownTime(timeLeft[0]))
                             .replace("{round}", String.valueOf(context.getCurrentRound()))
                             .replace("{round_max}", String.valueOf(context.getMaxRounds()));
                     context.getMessagesAPI().sendActionBar(player, actionBarMessage);
@@ -553,4 +552,10 @@ public class BattleRoyaleGame {
         }
         return context.getAlivePlayers().size() <= 1;
     }
+
+    private static String formatCountdownTime(int seconds) {
+        int safeSeconds = Math.max(0, seconds);
+        return String.format("%02d:%02d", safeSeconds / 60, safeSeconds % 60);
+    }
+
 }
