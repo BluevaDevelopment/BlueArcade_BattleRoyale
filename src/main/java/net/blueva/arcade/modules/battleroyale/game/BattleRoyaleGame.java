@@ -111,7 +111,7 @@ public class BattleRoyaleGame {
                         return;
                     }
                     player.teleport(targetView);
-                    context.setPlayerSpectating(player, true);
+                    player.setGameMode(GameMode.SPECTATOR);
                 });
             }
 
