@@ -1,7 +1,7 @@
 # BlueArcade - Battle Royale
 
 This resource is a **BlueArcade 3 module** and requires the core plugin to run.
-Get BlueArcade 3 here: https://store.blueva.net/resources/resource/1-blue-arcade/
+Get BlueArcade 3 here: https://blueva.net/store/blue-arcade
 
 ## Description
 Drop in, loot, and survive the storm. Be the last team or player standing.
