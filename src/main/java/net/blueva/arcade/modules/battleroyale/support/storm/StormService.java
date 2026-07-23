@@ -6,7 +6,6 @@ import net.blueva.arcade.api.module.ModuleInfo;
 import net.blueva.arcade.api.stats.StatsAPI;
 import net.blueva.arcade.modules.battleroyale.game.BattleRoyaleGame;
 import net.blueva.arcade.modules.battleroyale.state.ArenaState;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -17,23 +16,22 @@ import org.bukkit.entity.Player;
 import org.bukkit.WorldBorder;
 import org.bukkit.inventory.ItemStack;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class StormService {
 
-    private final ModuleInfo moduleInfo;
+    private static final double WORLD_BORDER_DEFAULT_SIZE = 59999968.0;
+    private static final double WORLD_BORDER_DEFAULT_DAMAGE_BUFFER = 5.0;
+    private static final double WORLD_BORDER_DEFAULT_DAMAGE_AMOUNT = 0.2;
+    private static final int WORLD_BORDER_DEFAULT_WARNING_DISTANCE = 5;
+    private static final int WORLD_BORDER_DEFAULT_WARNING_TIME = 15;
+
     private final ModuleConfigAPI moduleConfig;
-    private final StatsAPI statsAPI;
-    private final BattleRoyaleGame game;
 
     public StormService(ModuleInfo moduleInfo, ModuleConfigAPI moduleConfig, StatsAPI statsAPI, BattleRoyaleGame game) {
-        this.moduleInfo = moduleInfo;
         this.moduleConfig = moduleConfig;
-        this.statsAPI = statsAPI;
-        this.game = game;
     }
 
     public void initializeStorm(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
@@ -60,6 +58,10 @@ public class StormService {
         state.resetStormPhaseTicks();
         state.setStormPhaseDuration(resolveInitialStandbySeconds(state, stages));
         initializeWorldBorder(context, state);
+        WorldBorder border = state.getStormBorder();
+        if (border != null) {
+            border.setDamageAmount(stages.get(0).damagePerSecond);
+        }
         announceStormIncoming(context, state, stages);
     }
 
@@ -80,48 +82,7 @@ public class StormService {
 
         tickStormPhase(context, state, stages);
         syncStormRadius(state);
-        updateWorldBorder(context, state);
-        applyStormDamage(context, state, stages);
         spawnStormLightning(context, state);
-    }
-
-    private void applyStormDamage(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
-                                  ArenaState state,
-                                  List<StormStage> stages) {
-        if (context.getPhase() == null) {
-            return;
-        }
-
-        int damageStageIndex = state.isStormMoving() ? state.getStormNextStageIndex() : state.getStormStageIndex();
-        StormStage stage = stages.get(Math.min(damageStageIndex, stages.size() - 1));
-        double damage = Math.max(0.0, stage.damagePerSecond);
-        if (damage <= 0) {
-            return;
-        }
-
-        double safeRadius = resolveCurrentRadius(state);
-        for (Player player : context.getAlivePlayers()) {
-            if (!player.isOnline()) {
-                continue;
-            }
-            if (state.isDropping(player.getUniqueId())) {
-                continue;
-            }
-            if (!isInsideSafeZone(state, player.getLocation(), safeRadius)) {
-                double finalHealth = player.getHealth() - damage;
-                if (finalHealth <= 0) {
-                    if (statsAPI != null) {
-                        statsAPI.addModuleStat(player, moduleInfo.getId(), "storm_damage_taken", (int) Math.ceil(damage));
-                    }
-                    game.handleNonCombatDeath(context, player);
-                } else {
-                    player.damage(damage);
-                    if (statsAPI != null) {
-                        statsAPI.addModuleStat(player, moduleInfo.getId(), "storm_damage_taken", (int) Math.ceil(damage));
-                    }
-                }
-            }
-        }
     }
 
     private void spawnStormLightning(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
@@ -153,23 +114,6 @@ public class StormService {
             Location strikeLocation = randomStormLocation(center, radius, resolveCurrentRadius(state));
             world.strikeLightningEffect(strikeLocation);
         }
-    }
-
-    public boolean isInsideSafeZone(ArenaState state, Location location) {
-        return isInsideSafeZone(state, location, resolveCurrentRadius(state));
-    }
-
-    private boolean isInsideSafeZone(ArenaState state, Location location, double safeRadius) {
-        if (state.getStormCenter() == null || location == null) {
-            return true;
-        }
-        if (!location.getWorld().equals(state.getStormCenter().getWorld())) {
-            return true;
-        }
-
-        double dx = Math.abs(location.getX() - state.getStormCenter().getX());
-        double dz = Math.abs(location.getZ() - state.getStormCenter().getZ());
-        return dx <= safeRadius && dz <= safeRadius;
     }
 
     private Location resolveCenter(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
@@ -240,55 +184,30 @@ public class StormService {
 
     private void initializeWorldBorder(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
                                        ArenaState state) {
-        if (state.getStormCenter() == null) {
+        if (state.getStormCenter() == null || state.getStormCenter().getWorld() == null) {
             return;
         }
-        WorldBorder border = createWorldBorder(state.getStormCenter());
+        WorldBorder border = state.getStormCenter().getWorld().getWorldBorder();
         border.setCenter(state.getStormCenter());
         border.setSize(Math.max(1.0, state.getStormRadius() * 2.0));
         border.setWarningDistance(0);
         border.setWarningTime(0);
+        border.setDamageBuffer(0);
         state.setStormBorder(border);
-        for (Player player : context.getPlayers()) {
-            setPlayerWorldBorder(player, border);
-        }
-    }
-
-    private void updateWorldBorder(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
-                                   ArenaState state) {
-        WorldBorder border = state.getStormBorder();
-        if (border == null || state.getStormCenter() == null) {
-            return;
-        }
-        border.setCenter(state.getStormCenter());
-        for (Player player : context.getPlayers()) {
-            setPlayerWorldBorder(player, border);
-        }
     }
 
     public void clearWorldBorder(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
                                  ArenaState state) {
+        WorldBorder border = state.getStormBorder();
         state.setStormBorder(null);
-        for (Player player : context.getPlayers()) {
-            setPlayerWorldBorder(player, null);
+        if (border == null) {
+            return;
         }
-    }
-
-    private WorldBorder createWorldBorder(Location center) {
-        try {
-            Method creator = Bukkit.class.getMethod("createWorldBorder");
-            return (WorldBorder) creator.invoke(null);
-        } catch (ReflectiveOperationException ignored) {
-            return center.getWorld().getWorldBorder();
-        }
-    }
-
-    private void setPlayerWorldBorder(Player player, WorldBorder border) {
-        try {
-            Method setter = player.getClass().getMethod("setWorldBorder", WorldBorder.class);
-            setter.invoke(player, border);
-        } catch (ReflectiveOperationException ignored) {
-        }
+        border.setSize(WORLD_BORDER_DEFAULT_SIZE);
+        border.setDamageBuffer(WORLD_BORDER_DEFAULT_DAMAGE_BUFFER);
+        border.setDamageAmount(WORLD_BORDER_DEFAULT_DAMAGE_AMOUNT);
+        border.setWarningDistance(WORLD_BORDER_DEFAULT_WARNING_DISTANCE);
+        border.setWarningTime(WORLD_BORDER_DEFAULT_WARNING_TIME);
     }
 
     private void tickStormPhase(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
@@ -331,6 +250,7 @@ public class StormService {
         WorldBorder border = state.getStormBorder();
         if (border != null) {
             border.setSize(Math.max(1.0, targetRadius * 2.0), stage.durationSeconds);
+            border.setDamageAmount(stage.damagePerSecond);
         }
 
         state.setStormMoving(true);
