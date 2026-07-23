@@ -3,6 +3,7 @@ package net.blueva.arcade.modules.battleroyale.game;
 import net.blueva.arcade.api.config.CoreConfigAPI;
 import net.blueva.arcade.api.config.ModuleConfigAPI;
 import net.blueva.arcade.api.game.GameContext;
+import net.blueva.arcade.api.game.GamePhase;
 import net.blueva.arcade.api.module.ModuleInfo;
 import net.blueva.arcade.api.stats.StatsAPI;
 import net.blueva.arcade.api.team.TeamInfo;
@@ -29,6 +30,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -80,7 +82,6 @@ public class BattleRoyaleGame {
         context.getSchedulerAPI().cancelArenaTasks(arenaId);
         ArenaState state = new ArenaState(context);
         arenas.put(arenaId, state);
-        state.setTrackedChests(lootService.loadChests(context));
 
         TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
         for (Player player : context.getPlayers()) {
@@ -167,7 +168,6 @@ public class BattleRoyaleGame {
         stormService.initializeStorm(context, state);
         startGameTimer(context, state);
         dropService.startDrop(context, state);
-        lootService.startChestMarkers(context, state);
     }
 
     public void finishGame(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
@@ -345,6 +345,41 @@ public class BattleRoyaleGame {
             return false;
         }
         return lootService.isChestLooted(state, block);
+    }
+
+    /**
+     * Handles chests destroyed by an explosion (TNT, creepers, ...). Each affected chest is
+     * registered in memory and looted the same way as when a player interacts with it.
+     */
+    public void handleChestExplosion(List<org.bukkit.block.Block> blocks) {
+        if (blocks == null || blocks.isEmpty()) {
+            return;
+        }
+
+        for (ArenaState state : arenas.values()) {
+            GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context = state.getContext();
+            if (context == null || context.getPhase() != GamePhase.PLAYING) {
+                continue;
+            }
+
+            World arenaWorld = context.getArenaAPI() != null ? context.getArenaAPI().getWorld() : null;
+            Iterator<org.bukkit.block.Block> iterator = blocks.iterator();
+            while (iterator.hasNext()) {
+                org.bukkit.block.Block block = iterator.next();
+                Material type = block.getType();
+                if (type != Material.CHEST && type != Material.TRAPPED_CHEST && type != Material.ENDER_CHEST) {
+                    continue;
+                }
+                if (arenaWorld != null && !arenaWorld.equals(block.getWorld())) {
+                    continue;
+                }
+                lootService.handleChestLoot(context, state, null, block);
+                if (block.getType() == Material.AIR) {
+                    // Loot was dropped and the block removed by the loot service
+                    iterator.remove();
+                }
+            }
+        }
     }
 
     public void endGame(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {

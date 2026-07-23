@@ -114,11 +114,6 @@ setup_messages:
     invalid_limit: "{prefix} <red>Team configuration exceeds arena max players ({max_players}).</red>"
     invalid_value: "{prefix} <red>Team {setting} must be greater than 0.</red>"
     invalid_count: "{prefix} <red>Team count must be at least 2.</red>"
-  search_chests:
-    missing_bounds: "{prefix} <red>Game bounds are not configured yet.</red>"
-    start: "{prefix} <yellow>Searching for chests... ({blocks} blocks to scan)</yellow>"
-    action_bar: "<gold>Searching chests</gold> <gray>(Time elapsed: {time})</gray> <dark_gray>•</dark_gray> <green>{found}</green>"
-    complete: "{prefix} <green>Chest search completed.</green> <yellow>Found {found} chests in {time}.</yellow>"
   region:
     usage: "{prefix} <red>Usage:</red> <yellow>/baa game <id> battle_royale region <set|clear></yellow>"
     must_use_stick: "{prefix} <red>Select two corners with the setup tool first.</red>"

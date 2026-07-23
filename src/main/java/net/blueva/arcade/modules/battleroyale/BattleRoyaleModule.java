@@ -178,7 +178,6 @@ public class BattleRoyaleModule implements GameModule<Player, Location, World, M
             public List<ModuleSetupStep> getSetupSteps() {
                 return List.of(
                         new ModuleSetupStep("region", true, "Configure Region", "Configure the module-specific region setup data.", List.of("/baa game <arena> battle_royale region"), "selection region"),
-                        new ModuleSetupStep("searchchests", true, "Configure Searchchests", "Configure the module-specific searchchests setup data.", List.of("/baa game <arena> battle_royale searchchests"), "chest locations"),
                         new ModuleSetupStep("team", true, "Configure Team", "Configure the module-specific team setup data.", List.of("/baa game <arena> battle_royale team"), "team count and team size")
                 );
             }
@@ -187,7 +186,6 @@ public class BattleRoyaleModule implements GameModule<Player, Location, World, M
             public List<ModuleSetupCommand> getSetupCommands() {
                 return List.of(
                         new ModuleSetupCommand("region", "/baa game <arena> battle_royale region", "Configure region setup data.", true),
-                        new ModuleSetupCommand("searchchests", "/baa game <arena> battle_royale searchchests", "Configure searchchests setup data.", true),
                         new ModuleSetupCommand("team", "/baa game <arena> battle_royale team", "Configure team setup data.", true)
                 );
             }
@@ -196,7 +194,6 @@ public class BattleRoyaleModule implements GameModule<Player, Location, World, M
             public List<ModuleSetupStatusCheck<?, ?, ?>> getStatusChecks() {
                 return List.of(
                         new ModuleSetupStatusCheck<>("region", true, "Select the play area region.", context -> (context.getData().has("game.play_area.bounds.min.x") && context.getData().has("game.play_area.bounds.max.x")) || (context.getData().has("game.region.bounds.min.x") && context.getData().has("game.region.bounds.max.x"))),
-                        new ModuleSetupStatusCheck<>("searchchests", true, "Search and save map chests.", context -> context.getData().has("loot.chests.locations")),
                         new ModuleSetupStatusCheck<>("team", true, "Set team count and team size.", context -> context.getData().getInt("teams.count", 0) > 0 && context.getData().getInt("teams.size", 0) > 0)
                 );
             }

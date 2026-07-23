@@ -5,24 +5,15 @@ import net.blueva.arcade.api.setup.SetupContext;
 import net.blueva.arcade.api.setup.TabCompleteContext;
 import net.blueva.arcade.api.setup.TabCompleteResult;
 import net.blueva.arcade.modules.battleroyale.BattleRoyaleModule;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class BattleRoyaleSetup implements GameSetupHandler {
 
     private final BattleRoyaleModule module;
-    private final Map<Player, Integer> activeSearchTasks = new ConcurrentHashMap<>();
 
     public BattleRoyaleSetup(BattleRoyaleModule module) {
         this.module = module;
@@ -35,9 +26,6 @@ public class BattleRoyaleSetup implements GameSetupHandler {
 
     private boolean handleInternal(SetupContext<Player, CommandSender, Location> context) {
         String subcommand = context.getArg(context.getStartIndex() - 1);
-        if ("searchchests".equalsIgnoreCase(subcommand)) {
-            return handleSearchChests(context);
-        }
         if ("region".equalsIgnoreCase(subcommand)) {
             return handleRegion(context);
         }
@@ -63,7 +51,7 @@ public class BattleRoyaleSetup implements GameSetupHandler {
 
     @Override
     public List<String> getSubcommands() {
-        return List.of("team", "searchchests", "region");
+        return List.of("team", "region");
     }
 
     private boolean handleTeamConfig(SetupContext<Player, CommandSender, Location> context) {
@@ -127,107 +115,6 @@ public class BattleRoyaleSetup implements GameSetupHandler {
                         .replace("{arena_id}", String.valueOf(context.getArenaId()))
                         .replace("{setting}", setting.toLowerCase())
                         .replace("{value}", String.valueOf(value)));
-        return true;
-    }
-
-    private boolean handleSearchChests(SetupContext<Player, CommandSender, Location> context) {
-        Player player = context.getPlayer();
-        if (player == null) {
-            return true;
-        }
-
-        if (!context.getData().has("bounds.min.x") || !context.getData().has("bounds.max.x")) {
-            context.getMessagesAPI().sendRaw(player,
-                    getSetupMessage(context.getPlayer(), "search_chests.missing_bounds"));
-            return true;
-        }
-
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("BlueArcade3");
-        if (plugin == null) {
-            return true;
-        }
-
-        Integer existingTask = activeSearchTasks.remove(player);
-        if (existingTask != null) {
-            Bukkit.getScheduler().cancelTask(existingTask);
-        }
-
-        String worldName = context.getData().getString("basic.world");
-        World world = worldName == null ? null : Bukkit.getWorld(worldName);
-        if (world == null) {
-            context.getMessagesAPI().sendRaw(player,
-                    getSetupMessage(context.getPlayer(), "search_chests.missing_bounds"));
-            return true;
-        }
-
-        int minX = (int) Math.floor(context.getData().getDouble("bounds.min.x", 0));
-        int maxX = (int) Math.floor(context.getData().getDouble("bounds.max.x", 0));
-        int minY = (int) Math.floor(context.getData().getDouble("bounds.min.y", 0));
-        int maxY = (int) Math.floor(context.getData().getDouble("bounds.max.y", 0));
-        int minZ = (int) Math.floor(context.getData().getDouble("bounds.min.z", 0));
-        int maxZ = (int) Math.floor(context.getData().getDouble("bounds.max.z", 0));
-
-        int totalBlocks = (maxX - minX + 1) * (maxY - minY + 1) * (maxZ - minZ + 1);
-        int blocksPerTick = Math.max(200, module.getModuleConfig().getInt("loot.chests.search.blocks_per_tick", 1500));
-        List<String> chests = new ArrayList<>();
-        long startTime = System.currentTimeMillis();
-
-        context.getMessagesAPI().sendRaw(player,
-                getSetupMessage(context.getPlayer(), "search_chests.start")
-                        .replace("{blocks}", String.valueOf(totalBlocks)));
-
-        int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-            private int index;
-
-            @Override
-            public void run() {
-                if (!player.isOnline()) {
-                    cancelTask();
-                    return;
-                }
-
-                int processed = 0;
-                while (processed < blocksPerTick && index < totalBlocks) {
-                    int xOffset = index % (maxX - minX + 1);
-                    int yOffset = (index / (maxX - minX + 1)) % (maxY - minY + 1);
-                    int zOffset = index / ((maxX - minX + 1) * (maxY - minY + 1));
-                    int x = minX + xOffset;
-                    int y = minY + yOffset;
-                    int z = minZ + zOffset;
-                    Material type = world.getBlockAt(x, y, z).getType();
-                    if (type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.ENDER_CHEST) {
-                        chests.add(world.getName() + ":" + x + ":" + y + ":" + z + ":" + type.name());
-                    }
-                    index++;
-                    processed++;
-                }
-
-                String elapsed = formatElapsed(startTime);
-                String actionBar = getSetupMessage(context.getPlayer(), "search_chests.action_bar")
-                        .replace("{time}", elapsed)
-                        .replace("{found}", String.valueOf(chests.size()));
-                context.getMessagesAPI().sendActionBar(player, actionBar);
-
-                if (index >= totalBlocks) {
-                    context.getData().setStringList("loot.chests.locations", chests);
-                    context.getData().save();
-                    context.getMessagesAPI().sendRaw(player,
-                            getSetupMessage(context.getPlayer(), "search_chests.complete")
-                                    .replace("{found}", String.valueOf(chests.size()))
-                                    .replace("{time}", elapsed));
-                    cancelTask();
-                }
-            }
-
-            private void cancelTask() {
-                Integer id = activeSearchTasks.remove(player);
-                if (id != null) {
-                    Bukkit.getScheduler().cancelTask(id);
-                }
-            }
-        }, 1L, 1L);
-
-        activeSearchTasks.put(player, taskId);
         return true;
     }
 
@@ -297,13 +184,6 @@ public class BattleRoyaleSetup implements GameSetupHandler {
             return "";
         }
         return message;
-    }
-
-    private String formatElapsed(long startTime) {
-        long elapsedSeconds = Math.max(0L, (System.currentTimeMillis() - startTime) / 1000L);
-        long minutes = elapsedSeconds / 60L;
-        long seconds = elapsedSeconds % 60L;
-        return String.format(Locale.ROOT, "%02d:%02d", minutes, seconds);
     }
 
     private boolean isNumber(String value) {

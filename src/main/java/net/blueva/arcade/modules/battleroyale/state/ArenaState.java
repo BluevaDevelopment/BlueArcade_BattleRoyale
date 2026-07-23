@@ -13,7 +13,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +30,7 @@ public class ArenaState {
     private final Map<UUID, ItemStack> storedChestplates = new ConcurrentHashMap<>();
     private final Map<UUID, Long> planeBoardedAt = new ConcurrentHashMap<>();
     private final Set<String> lootedChests = ConcurrentHashMap.newKeySet();
-    private List<TrackedChest> trackedChests = new ArrayList<>();
+    private final Map<String, TrackedChest> trackedChests = new ConcurrentHashMap<>();
 
     private UUID winnerId;
     private boolean ended;
@@ -196,16 +195,15 @@ public class ArenaState {
         return lootedChests.contains(toKey(location));
     }
 
-    public void setTrackedChests(List<TrackedChest> trackedChests) {
-        if (trackedChests == null) {
-            this.trackedChests = new ArrayList<>();
+    public void trackChest(Location location, Material material) {
+        if (location == null || material == null) {
             return;
         }
-        this.trackedChests = new ArrayList<>(trackedChests);
+        trackedChests.putIfAbsent(toKey(location), new TrackedChest(location, material));
     }
 
     public List<TrackedChest> getTrackedChests() {
-        return List.copyOf(trackedChests);
+        return List.copyOf(trackedChests.values());
     }
 
     public void setStormCenter(Location stormCenter) {

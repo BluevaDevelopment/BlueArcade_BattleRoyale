@@ -17,7 +17,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class LootService {
@@ -36,7 +35,7 @@ public class LootService {
                                 ArenaState state,
                                 Player player,
                                 Block block) {
-        if (player == null || block == null) {
+        if (block == null) {
             return;
         }
 
@@ -46,6 +45,8 @@ public class LootService {
         if (!isNormalChest && !isSpecialChest) {
             return;
         }
+
+        state.trackChest(block.getLocation(), blockType);
 
         if (state.isChestLooted(block.getLocation())) {
             return;
@@ -82,34 +83,13 @@ public class LootService {
             block.getWorld().dropItemNaturally(dropLocation, stack);
         }
 
-        if (statsAPI != null) {
+        if (statsAPI != null && player != null) {
             statsAPI.addModuleStat(player, moduleInfo.getId(), "chests_looted", 1);
         }
     }
 
     public boolean isChestLooted(ArenaState state, Block block) {
         return block != null && state.isChestLooted(block.getLocation());
-    }
-
-    public List<TrackedChest> loadChests(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
-        if (context == null || context.getDataAccess() == null) {
-            return List.of();
-        }
-
-        List<String> entries = context.getDataAccess().getGameData("loot.chests.locations", List.class);
-        if (entries == null || entries.isEmpty()) {
-            return List.of();
-        }
-
-        World arenaWorld = context.getArenaAPI() != null ? context.getArenaAPI().getWorld() : null;
-        List<TrackedChest> chests = new ArrayList<>();
-        for (String entry : entries) {
-            TrackedChest trackedChest = parseTrackedChest(entry, arenaWorld);
-            if (trackedChest != null) {
-                chests.add(trackedChest);
-            }
-        }
-        return chests;
     }
 
     public void restoreChests(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
@@ -129,37 +109,6 @@ public class LootService {
                 }
             });
         }
-    }
-
-    public void startChestMarkers(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
-                                  ArenaState state) {
-        if (context == null || state == null) {
-            return;
-        }
-
-        int arenaId = context.getArenaId();
-        String taskId = "arena_" + arenaId + "_battle_royale_chest_markers";
-
-        context.getSchedulerAPI().runTimer(taskId, () -> {
-            for (TrackedChest chest : state.getTrackedChests()) {
-                Location location = chest.getLocation();
-                if (location == null || location.getWorld() == null) {
-                    continue;
-                }
-                Material currentType = location.getBlock().getType();
-                if (currentType != Material.CHEST
-                        && currentType != Material.TRAPPED_CHEST
-                        && currentType != Material.ENDER_CHEST) {
-                    continue;
-                }
-
-                Location particleLocation = location.clone().add(0.5, 1.1, 0.5);
-                Particle particle = currentType == Material.ENDER_CHEST
-                        ? Particle.PORTAL
-                        : happyVillagerParticle();
-                location.getWorld().spawnParticle(particle, particleLocation, 6, 0.2, 0.3, 0.2, 0.01);
-            }
-        }, 20L, 40L);
     }
 
     private List<LootEntry> parseEntries(String path) {
@@ -190,45 +139,6 @@ public class LootService {
         return parsed;
     }
 
-    private TrackedChest parseTrackedChest(String entry, World fallbackWorld) {
-        if (entry == null || entry.isEmpty()) {
-            return null;
-        }
-
-        String[] parts = entry.split(":");
-        if (parts.length < 4) {
-            return null;
-        }
-
-        String worldName = parts[0];
-        try {
-            int x = Integer.parseInt(parts[1]);
-            int y = Integer.parseInt(parts[2]);
-            int z = Integer.parseInt(parts[3]);
-            Material material = Material.CHEST;
-            if (parts.length >= 5) {
-                material = Material.valueOf(parts[4].toUpperCase(Locale.ROOT));
-            }
-            if (material != Material.CHEST
-                    && material != Material.TRAPPED_CHEST
-                    && material != Material.ENDER_CHEST) {
-                material = Material.CHEST;
-            }
-
-            World world = org.bukkit.Bukkit.getWorld(worldName);
-            if (world == null) {
-                world = fallbackWorld;
-            }
-            if (world == null) {
-                return null;
-            }
-            Location location = new Location(world, x, y, z);
-            return new TrackedChest(location, material);
-        } catch (Exception ignored) {
-            return null;
-        }
-    }
-
     private LootEntry pickEntry(List<LootEntry> entries) {
         int total = entries.stream().mapToInt(entry -> entry.weight).sum();
         if (total <= 0) {
@@ -243,14 +153,6 @@ public class LootService {
             }
         }
         return entries.get(entries.size() - 1);
-    }
-
-    private Particle happyVillagerParticle() {
-        try {
-            return Particle.valueOf("HAPPY_VILLAGER");
-        } catch (IllegalArgumentException ignored) {
-            return Particle.VILLAGER_HAPPY;
-        }
     }
 
     private static class LootEntry {

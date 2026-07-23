@@ -18,9 +18,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
@@ -142,6 +144,14 @@ public class BattleRoyaleListener implements Listener {
             return;
         }
 
+        Material type = event.getBlock().getType();
+        if (type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.ENDER_CHEST) {
+            // Breaking a chest loots it directly, same as interacting with it
+            event.setCancelled(true);
+            game.handleChestLoot(context, player, event.getBlock());
+            return;
+        }
+
         ArenaState state = game.getArenaState(context);
         if (state == null) {
             event.setCancelled(true);
@@ -179,6 +189,16 @@ public class BattleRoyaleListener implements Listener {
             event.setCancelled(true);
             return;
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityExplode(EntityExplodeEvent event) {
+        game.handleChestExplosion(event.blockList());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockExplode(BlockExplodeEvent event) {
+        game.handleChestExplosion(event.blockList());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

@@ -80,8 +80,6 @@ storm:
 
 loot:
   chests:
-    search:
-      blocks_per_tick: 1500
     item_count:
       min: 3
       max: 6

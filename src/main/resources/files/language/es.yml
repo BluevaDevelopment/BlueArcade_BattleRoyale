@@ -113,11 +113,6 @@ setup_messages:
     invalid_limit: "{prefix} <red>La configuración de equipos supera el máximo de jugadores de la arena ({max_players}).</red>"
     invalid_value: "{prefix} <red>Equipo {setting} debe ser mayor que 0.</red>"
     invalid_count: "{prefix} <red>El número de equipos debe ser al menos 2.</red>"
-  search_chests:
-    missing_bounds: "{prefix} <red>Los límites del juego aún no están configurados.</red>"
-    start: "{prefix} <yellow>Buscando cofres... ({blocks} bloques que escanear)</yellow>"
-    action_bar: "<gold>Buscando cofres</gold> <gray>(Tiempo transcurrido: {time})</gray> <dark_gray>•</dark_gray> <green>{found}</green>"
-    complete: "{prefix} <green>Búsqueda de cofres completada.</green> <yellow>Encontrados {found} cofres en {time}.</yellow>"
   region:
     usage: "{prefix} <red>Uso:</red> <yellow>/baa game <id> battle_royale region <set|clear></yellow>"
     must_use_stick: "{prefix} <red>Selecciona primero dos esquinas con la herramienta de setup.</red>"
