@@ -105,6 +105,12 @@ public class BattleRoyaleListener implements Listener {
                 return;
             }
 
+            ArenaState state = game.getArenaState(context);
+            if (state != null && state.isPlayerPlacedChest(event.getClickedBlock().getLocation())) {
+                // Player-placed chests behave as plain vanilla chests
+                return;
+            }
+
             if (game.isChestLooted(context, player, event.getClickedBlock())) {
                 event.setCancelled(true);
                 return;
@@ -144,15 +150,20 @@ public class BattleRoyaleListener implements Listener {
             return;
         }
 
+        ArenaState state = game.getArenaState(context);
+
         Material type = event.getBlock().getType();
         if (type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.ENDER_CHEST) {
-            // Breaking a chest loots it directly, same as interacting with it
-            event.setCancelled(true);
-            game.handleChestLoot(context, player, event.getBlock());
-            return;
+            if (state != null && state.isPlayerPlacedChest(event.getBlock().getLocation())) {
+                // Player-placed chests break as plain vanilla blocks
+            } else {
+                // Breaking a chest loots it directly, same as interacting with it
+                event.setCancelled(true);
+                game.handleChestLoot(context, player, event.getBlock());
+                return;
+            }
         }
 
-        ArenaState state = game.getArenaState(context);
         if (state == null) {
             event.setCancelled(true);
             return;
@@ -188,6 +199,11 @@ public class BattleRoyaleListener implements Listener {
         if (!state.hasRespawnRegion()) {
             event.setCancelled(true);
             return;
+        }
+
+        Material type = event.getBlock().getType();
+        if (type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.ENDER_CHEST) {
+            state.markPlayerPlacedChest(event.getBlock().getLocation());
         }
     }
 

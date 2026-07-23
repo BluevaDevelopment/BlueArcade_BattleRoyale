@@ -31,6 +31,7 @@ public class ArenaState {
     private final Map<UUID, Long> planeBoardedAt = new ConcurrentHashMap<>();
     private final Set<String> lootedChests = ConcurrentHashMap.newKeySet();
     private final Map<String, TrackedChest> trackedChests = new ConcurrentHashMap<>();
+    private final Set<String> playerPlacedChestKeys = ConcurrentHashMap.newKeySet();
 
     private UUID winnerId;
     private boolean ended;
@@ -204,6 +205,16 @@ public class ArenaState {
 
     public List<TrackedChest> getTrackedChests() {
         return List.copyOf(trackedChests.values());
+    }
+
+    public void markPlayerPlacedChest(Location location) {
+        if (location != null) {
+            playerPlacedChestKeys.add(toKey(location));
+        }
+    }
+
+    public boolean isPlayerPlacedChest(Location location) {
+        return location != null && playerPlacedChestKeys.contains(toKey(location));
     }
 
     public void setStormCenter(Location stormCenter) {
