@@ -50,6 +50,9 @@ messages:
   storm:
     incoming: "<aqua>The storm will start moving in <white>{seconds}</white> seconds.</aqua>"
     moving: "<red>The storm is closing in!</red>"
+  grace_period:
+    started: "<green>Grace period: PvP is disabled for <white>{seconds}</white> seconds.</green>"
+    ended: "<red>The grace period has ended. PvP is now enabled!</red>"
   deaths:
     killed_by_player:
       - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>was eliminated by</gray> <yellow>{killer}</yellow><gray>.</gray>"

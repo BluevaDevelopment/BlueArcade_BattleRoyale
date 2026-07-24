@@ -245,6 +245,12 @@ public class BattleRoyaleListener implements Listener {
             return;
         }
 
+        ArenaState state = game.getArenaState(context);
+        if (state != null && state.isGracePeriodActive()) {
+            event.setCancelled(true);
+            return;
+        }
+
         TeamsAPI<Player, Material> teamsAPI = context.getTeamsAPI();
         if (teamsAPI != null && teamsAPI.isEnabled()) {
             TeamInfo<Player, Material> attackerTeam = teamsAPI.getTeam(attacker);

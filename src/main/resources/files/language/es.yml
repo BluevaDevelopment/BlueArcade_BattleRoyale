@@ -49,6 +49,9 @@ messages:
   storm:
     incoming: "<aqua>La tormenta empezará a moverse en <white>{seconds}</white> segundos.</aqua>"
     moving: "<red>¡La tormenta se está cerrando!</red>"
+  grace_period:
+    started: "<green>Periodo de gracia: el PvP está desactivado durante <white>{seconds}</white> segundos.</green>"
+    ended: "<red>¡El periodo de gracia ha terminado! El PvP está activado.</red>"
   deaths:
     killed_by_player:
       - "<dark_red>✘</dark_red> <red>{victim}</red> <gray>fue eliminado por</gray> <yellow>{killer}</yellow><gray>.</gray>"

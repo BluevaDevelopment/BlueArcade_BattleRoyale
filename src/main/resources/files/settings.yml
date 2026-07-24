@@ -16,6 +16,8 @@ menus:
 game:
   # Set to 0 to disable a time limit
   time_limit_seconds: 0
+  # Seconds of PvP protection at the start of the match (0 to disable)
+  grace_period_seconds: 60
 
 block_rules:
   # When true, players can only break blocks placed by players during the match

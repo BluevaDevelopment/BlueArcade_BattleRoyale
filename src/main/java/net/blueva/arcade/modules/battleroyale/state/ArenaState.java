@@ -51,6 +51,9 @@ public class ArenaState {
     private List<Entity> planeDisplays;
     private WorldBorder stormBorder;
 
+    private long gracePeriodUntilMillis;
+    private boolean gracePeriodEnded = true;
+
     private Boolean respawnRegionCheckResult;
 
     public ArenaState(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context) {
@@ -325,6 +328,28 @@ public class ArenaState {
 
     public void setStormBorder(WorldBorder stormBorder) {
         this.stormBorder = stormBorder;
+    }
+
+    public void startGracePeriod(long durationMillis) {
+        if (durationMillis <= 0) {
+            gracePeriodUntilMillis = 0;
+            gracePeriodEnded = true;
+            return;
+        }
+        gracePeriodUntilMillis = System.currentTimeMillis() + durationMillis;
+        gracePeriodEnded = false;
+    }
+
+    public boolean isGracePeriodActive() {
+        return !gracePeriodEnded && System.currentTimeMillis() < gracePeriodUntilMillis;
+    }
+
+    public boolean markGracePeriodEnded() {
+        if (gracePeriodEnded) {
+            return false;
+        }
+        gracePeriodEnded = true;
+        return true;
     }
 
     public boolean hasRespawnRegion() {

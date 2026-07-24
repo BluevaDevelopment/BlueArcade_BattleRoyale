@@ -165,6 +165,12 @@ public class BattleRoyaleGame {
             context.getScoreboardAPI().showScoreboard(player, getScoreboardPath(context));
         }
 
+        int graceSeconds = Math.max(0, moduleConfig.getInt("game.grace_period_seconds", 60));
+        state.startGracePeriod(graceSeconds * 1000L);
+        if (graceSeconds > 0) {
+            broadcastGraceMessage(context, "messages.grace_period.started", graceSeconds);
+        }
+
         stormService.initializeStorm(context, state);
         startGameTimer(context, state);
         dropService.startDrop(context, state);
@@ -530,6 +536,21 @@ public class BattleRoyaleGame {
         return state.isDropping(player.getUniqueId());
     }
 
+    private void broadcastGraceMessage(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
+                                       String languagePath,
+                                       int seconds) {
+        for (Player player : context.getPlayers()) {
+            if (!player.isOnline()) {
+                continue;
+            }
+            String message = moduleConfig.getTranslation(player, languagePath);
+            if (message == null || message.isEmpty()) {
+                continue;
+            }
+            context.getMessagesAPI().sendRaw(player, message.replace("{seconds}", String.valueOf(seconds)));
+        }
+    }
+
     private void startGameTimer(GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context,
                                 ArenaState state) {
         int arenaId = context.getArenaId();
@@ -546,6 +567,10 @@ public class BattleRoyaleGame {
             }
 
             tickStorm(context);
+
+            if (!state.isGracePeriodActive() && state.markGracePeriodEnded()) {
+                broadcastGraceMessage(context, "messages.grace_period.ended", 0);
+            }
 
             List<Player> alivePlayers = context.getAlivePlayers();
             List<Player> allPlayers = context.getPlayers();
