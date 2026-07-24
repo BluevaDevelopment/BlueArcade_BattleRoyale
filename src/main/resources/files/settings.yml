@@ -17,6 +17,10 @@ game:
   # Set to 0 to disable a time limit
   time_limit_seconds: 0
 
+block_rules:
+  # When true, players can only break blocks placed by players during the match
+  break_only_player_placed: false
+
 drop:
   enabled: true
   # Height for the dragon flight path.

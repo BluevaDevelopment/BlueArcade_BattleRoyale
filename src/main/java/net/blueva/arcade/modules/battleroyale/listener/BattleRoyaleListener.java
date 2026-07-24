@@ -152,6 +152,12 @@ public class BattleRoyaleListener implements Listener {
 
         ArenaState state = game.getArenaState(context);
 
+        if (game.getModuleConfig().getBoolean("block_rules.break_only_player_placed", false)
+                && (state == null || !state.isPlayerPlacedBlock(event.getBlock().getLocation()))) {
+            event.setCancelled(true);
+            return;
+        }
+
         Material type = event.getBlock().getType();
         if (type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.ENDER_CHEST) {
             if (state != null && state.isPlayerPlacedChest(event.getBlock().getLocation())) {
@@ -173,6 +179,8 @@ public class BattleRoyaleListener implements Listener {
             event.setCancelled(true);
             return;
         }
+
+        state.untrackPlacedBlock(event.getBlock().getLocation());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -201,10 +209,7 @@ public class BattleRoyaleListener implements Listener {
             return;
         }
 
-        Material type = event.getBlock().getType();
-        if (type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.ENDER_CHEST) {
-            state.markPlayerPlacedChest(event.getBlock().getLocation());
-        }
+        state.trackPlacedBlock(event.getBlock().getLocation());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

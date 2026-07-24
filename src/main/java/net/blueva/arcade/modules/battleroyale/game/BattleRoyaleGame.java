@@ -356,6 +356,7 @@ public class BattleRoyaleGame {
             return;
         }
 
+        boolean breakOnlyPlaced = moduleConfig.getBoolean("block_rules.break_only_player_placed", false);
         for (ArenaState state : arenas.values()) {
             GameContext<Player, Location, World, Material, ItemStack, Sound, Block, Entity> context = state.getContext();
             if (context == null || context.getPhase() != GamePhase.PLAYING) {
@@ -366,16 +367,23 @@ public class BattleRoyaleGame {
             Iterator<org.bukkit.block.Block> iterator = blocks.iterator();
             while (iterator.hasNext()) {
                 org.bukkit.block.Block block = iterator.next();
+                if (arenaWorld != null && !arenaWorld.equals(block.getWorld())) {
+                    continue;
+                }
+                if (breakOnlyPlaced) {
+                    if (state.isPlayerPlacedBlock(block.getLocation())) {
+                        state.untrackPlacedBlock(block.getLocation());
+                    } else {
+                        iterator.remove();
+                        continue;
+                    }
+                }
                 Material type = block.getType();
                 if (type != Material.CHEST && type != Material.TRAPPED_CHEST && type != Material.ENDER_CHEST) {
                     continue;
                 }
-                if (arenaWorld != null && !arenaWorld.equals(block.getWorld())) {
-                    continue;
-                }
                 lootService.handleChestLoot(context, state, null, block);
                 if (block.getType() == Material.AIR) {
-                    // Loot was dropped and the block removed by the loot service
                     iterator.remove();
                 }
             }
